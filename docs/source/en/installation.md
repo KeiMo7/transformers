@@ -204,3 +204,72 @@ model = LlamaForCausalLM.from_pretrained("./path/to/local/directory", local_file
 ```
 
 Offline mode (or `local_files_only=True`) can still turn a branch or tag into a commit if an earlier online load saved that mapping in the cache. If the mapping was never saved, Transformers keeps the branch or tag you asked for and continues with the regular offline load. You get the same cache hits or missing-file errors as a normal offline load.
+
+### Verify the local cache
+
+A cache entry can be incomplete (an interrupted download, a deleted blob) or corrupted (bytes on disk that no longer match what the Hub recorded). Transformers ships optional, **read-only** cache self-verification so a model cache can prove its own completeness and integrity. It is off by default; nothing changes until you opt in with either the `verify_cache=True` argument or the `TRANSFORMERS_CACHE_VERIFY=1` environment variable (an explicit argument always wins).
+
+Verification recomputes the sha256 of every cached file from the actual bytes on disk and, for Git-LFS files, compares it with the digest encoded in the blob name. Metadata alone is never trusted. Hashing streams the file in 1 MiB chunks, so memory stays flat even for multi-tens-of-GB checkpoints; pass `verify_progress=True` for a progress bar, and interrupt at any time with `Ctrl+C` (no cache entry is modified).
+
+Inspect what is cached, without any network access:
+
+```py
+from transformers.utils import get_cached_model_manifest
+
+manifest = get_cached_model_manifest("google-bert/bert-base-uncased")
+for revision in manifest.revisions:
+    print(revision.revision, revision.refs, revision.total_size, revision.is_complete)
+    for f in revision.files:
+        print(f"  {f.file_name}  sha256={f.sha256}  verified={f.digest_verified}")
+```
+
+The manifest reports the model identifier, the immutable commit hash and refs (so different revisions of the same model coexist and the one actually used is always explicit), the file list with per-file digests and sizes, and the total size. It is JSON-serializable through `manifest.to_dict()`.
+
+Verify a revision (read-only; never downloads):
+
+```py
+from transformers.utils import verify_cached_model
+
+# Raises CacheIncompleteError / CacheCorruptedError, or returns the manifest when intact.
+manifest = verify_cached_model(
+    "google-bert/bert-base-uncased",
+    expected_files=["config.json", "model.safetensors"],
+    progress=True,
+)
+```
+
+When verification is enabled on a load, an offline failure is classified into one of three distinguishable causes instead of a single "couldn't find the files" message:
+
+| `exception.reason` | Meaning |
+| --- | --- |
+| `cache_missing` | The repo, revision or file is not in the local cache. |
+| `cache_corrupted` / `cache_incomplete` | The entry exists but its bytes are corrupted or files are missing. |
+| `network_required_offline` | The cache is present and intact but does not hold everything requested; the Hub would be needed and network access is disabled. |
+
+```py
+from transformers import cached_file
+from transformers.utils import CacheVerificationError
+
+try:
+    cached_file("google-bert/bert-base-uncased", "model.safetensors", verify_cache=True, local_files_only=True)
+except CacheVerificationError as e:
+    print(e.reason)  # 'cache_missing' | 'cache_corrupted' | 'cache_incomplete' | 'network_required_offline'
+```
+
+Before a download, verification also pre-checks the cache directory: `InsufficientDiskSpaceError` names the required versus free bytes up front, and `CacheDirectoryNotWritableError` names the directory that cannot be written to. Partially downloaded files are kept on a network interruption (the `*.incomplete` blobs are reported by verification), and resuming re-validates the bytes already on disk.
+
+Clean up a model's cache by revision; `dry_run=True` only reports the bytes that would be freed:
+
+```py
+from transformers.utils import cleanup_cached_repo
+
+freed = cleanup_cached_repo("google-bert/bert-base-uncased", dry_run=True)
+cleanup_cached_repo("google-bert/bert-base-uncased", revision="<commit-hash>")
+```
+
+Known limitations:
+
+- Non-LFS (regular Git) files are stored under their Git object sha1, which is not a digest of the raw file content, so their integrity cannot be self-proved from the cache alone; they are still listed and hashed, with `digest_verified=False`. Git-LFS files (model weights, tokenizers, most large artifacts) are fully verified.
+- The disk-space pre-check relies on Hub file metadata; in offline mode the size is unknown so only the writability check runs.
+- Verification is per-file and deterministic; running it concurrently with loads or from several processes is safe because it only opens files for reading. The optional writability probe creates and immediately deletes one tiny temporary file, only when a download path is actually entered (never on a pure cache hit).
+- Caches produced by older `huggingface_hub` versions use the same `blobs`/`snapshots`/`refs` layout, so reporting and read-only verification work on them as-is; only the new opt-in error classification and pre-download checks are added by this version, and older dictionaries/models/adapters keep loading exactly as before when the switch is off.

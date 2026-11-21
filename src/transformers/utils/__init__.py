@@ -31,6 +31,26 @@ from .auto_docstring import (
     parse_docstring,
     set_min_indent,
 )
+from .cache_verification import (
+    CACHE_VERIFICATION_ENV_VAR,
+    CacheCorruptedError,
+    CachedFileManifest,
+    CacheDirectoryNotWritableError,
+    CachedRepoManifest,
+    CachedRepoNotFoundError,
+    CacheEntryMissingError,
+    CacheIncompleteError,
+    CacheVerificationError,
+    InsufficientDiskSpaceError,
+    NetworkRequiredOfflineError,
+    check_cache_dir_writable,
+    check_disk_space,
+    cleanup_cached_repo,
+    diagnose_offline_failure,
+    get_cached_model_manifest,
+    hash_file,
+    verify_cached_model,
+)
 from .chat_template_utils import DocstringParsingException, TypeHintParsingException, get_json_schema
 from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_STANDARD_MEAN, IMAGENET_STANDARD_STD
 from .doc import (

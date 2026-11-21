@@ -56,6 +56,15 @@ from huggingface_hub.utils import (
 )
 
 from . import __version__, logging
+from .cache_verification import (
+    CACHE_VERIFICATION_ENV_VAR,
+    CacheCorruptedError,
+    CacheVerificationError,
+    check_cache_dir_writable,
+    check_disk_space,
+    diagnose_offline_failure,
+    hash_file,
+)
 from .import_utils import (
     ENV_VARS_TRUE_VALUES,
     get_torch_version,
@@ -312,6 +321,126 @@ def _pinned_commit_hash(revision: str | None) -> str | None:
     return None
 
 
+def _cache_verification_enabled(verify_cache: bool | None) -> bool:
+    """Resolve the verification switch.
+
+    An explicit `True`/`False` argument always wins. `None` (the default) keeps the historical
+    behavior unless the `TRANSFORMERS_CACHE_VERIFY` environment variable opts in, so existing
+    call sites and tests are unaffected.
+    """
+    if verify_cache is not None:
+        return verify_cache
+    return os.getenv(CACHE_VERIFICATION_ENV_VAR, "").upper() in ENV_VARS_TRUE_VALUES
+
+
+def _verify_resolved_files(
+    path_or_repo_id: str,
+    full_filenames: list[str],
+    resolved_files: list[str | None],
+    cache_dir: str,
+    revision: str | None,
+    repo_type: str | None,
+    progress: bool,
+) -> None:
+    """Hash every resolved cached file and compare it with the digest encoded in its blob name.
+
+    Read-only: only `open(..., "rb")` is used, no cache entry is created or modified. A missing
+    file is left to the regular missing-entry machinery; only present-but-corrupt files raise
+    here, as [`~cache_verification.CacheCorruptedError`].
+    """
+    for filename, resolved in zip(full_filenames, resolved_files):
+        if not isinstance(resolved, str) or not os.path.isfile(resolved):
+            continue
+        actual_digest = hash_file(resolved)
+        expected_digest = _expected_blob_digest(resolved)
+        if expected_digest is not None and actual_digest != expected_digest:
+            raise CacheCorruptedError(
+                f"Cached file {filename!r} of {path_or_repo_id} (revision {revision}) is corrupted: "
+                f"expected sha256 {expected_digest} but the bytes on disk hash to {actual_digest}. "
+                f"Delete the cache entry under {cache_dir} and re-download, or call "
+                "`transformers.utils.cleanup_cached_repo` first."
+            )
+        logger.debug(
+            "Verified cache entry %s for %s@%s (sha256=%s).",
+            filename,
+            path_or_repo_id,
+            revision,
+            actual_digest,
+        )
+
+
+def _expected_blob_digest(resolved_path: str | None) -> str | None:
+    """Digest encoded by the blob name a snapshot entry points at, or `None` for non-LFS files."""
+    if resolved_path is None:
+        return None
+    from .cache_verification import _expected_digest_from_blob_name
+
+    # `snapshots/<commit>/<file>` is a symlink to `blobs/<etag>`.
+    return _expected_digest_from_blob_name(os.path.basename(os.path.realpath(resolved_path)))
+
+
+def _resolve_cached_revision(
+    path_or_repo_id: str, revision: str | None, cache_dir: str, repo_type: str | None
+) -> str | None:
+    """Turn a ref name (e.g. `"main"`) into the commit hash actually cached for it.
+
+    When the revision is already a commit hash, or no `refs/<revision>` file exists locally,
+    it is returned unchanged and the verifier reports a missing revision instead of guessing.
+    """
+    if revision is None or not REGEX_COMMIT_HASH.match(revision):
+        from huggingface_hub.file_download import repo_folder_name
+
+        ref_path = os.path.join(
+            cache_dir,
+            repo_folder_name(repo_id=path_or_repo_id, repo_type=repo_type or "model"),
+            "refs",
+            revision or "main",
+        )
+        if os.path.isfile(ref_path):
+            with open(ref_path, encoding="utf-8") as f:
+                return f.read().strip()
+    return revision
+
+
+def _preflight_cache_writes(cache_dir: str, required_bytes: int | None) -> None:
+    """Best-effort pre-download checks: writable cache directory and enough free space."""
+    check_cache_dir_writable(cache_dir)
+    if required_bytes is not None and required_bytes > 0:
+        check_disk_space(required_bytes, cache_dir)
+
+
+def _estimated_download_size(
+    path_or_repo_id: str,
+    full_filenames: list[str],
+    cache_dir: str,
+    revision: str | None,
+    token,
+    local_files_only: bool,
+) -> int | None:
+    """Total size of the requested files that are not already cached, or `None` if unknown.
+
+    Any failure (offline mode, private repo without a valid token, API change, ...) makes the
+    estimate `None`: disk-space pre-check is best-effort and must never block a download that
+    the regular path could have served.
+    """
+    # In local-only / offline mode no Hub metadata call is allowed, so the size is unknown.
+    if local_files_only or is_offline_mode():
+        return None
+    try:
+        siblings = hf_api().model_info(path_or_repo_id, revision=revision, token=token, files_metadata=True).siblings
+    except Exception:
+        logger.debug("Could not fetch file metadata for %s to pre-check disk space.", path_or_repo_id, exc_info=True)
+        return None
+
+    sizes = {sibling.rfilename: sibling.size for sibling in siblings if sibling.size is not None}
+    missing_bytes = 0
+    for filename in full_filenames:
+        resolved = _get_cache_file_to_return(path_or_repo_id, filename, cache_dir, revision)
+        if resolved is None and filename in sizes:
+            missing_bytes += sizes[filename]
+    return missing_bytes
+
+
 def cached_file(
     path_or_repo_id: str | os.PathLike,
     filename: str,
@@ -384,6 +513,8 @@ def cached_files(
     subfolder: str = "",
     repo_type: str | None = None,
     user_agent: str | dict[str, str] | None = None,
+    verify_cache: bool | None = None,
+    verify_progress: bool = False,
     _raise_exceptions_for_gated_repo: bool = True,
     _raise_exceptions_for_missing_entries: bool = True,
     _raise_exceptions_for_connection_errors: bool = True,
@@ -425,6 +556,16 @@ def cached_files(
             specify the folder name here.
         repo_type (`str`, *optional*):
             Specify the repo type (useful when downloading from a space for instance).
+        verify_cache (`bool`, *optional*):
+            If `True`, every file returned from the local cache is hashed and checked against the digest encoded in
+            its blob name before the load proceeds; corrupted blobs raise [`~cache_verification.CacheCorruptedError`],
+            and offline failures are classified into *cache missing*, *cache corrupted* and *network required*
+            causes. Before any download, the cache directory writability and available disk space are pre-checked.
+            All checks are read-only and never trigger extra downloads. `None` (the default) keeps the historical
+            behavior unless the `TRANSFORMERS_CACHE_VERIFY` environment variable is set to a truthy value; `False`
+            disables verification explicitly.
+        verify_progress (`bool`, *optional*, defaults to `False`):
+            Show a progress bar while hashing cached files (useful for multi-tens-of-GB checkpoints).
 
     Private args:
         _raise_exceptions_for_gated_repo (`bool`):
@@ -455,6 +596,13 @@ def cached_files(
         local_files_only = True
     if subfolder is None:
         subfolder = ""
+    if repo_type is None:
+        # Normalize once so every downstream helper (cache lookups, ref resolution,
+        # verification) sees the same default the Hub cache layout itself uses.
+        repo_type = "model"
+
+    # An explicit argument wins; otherwise the env var opts in; otherwise behavior is unchanged.
+    do_verify = _cache_verification_enabled(verify_cache)
 
     # Add folder to filenames
     full_filenames = [os.path.join(subfolder, file) for file in filenames]
@@ -484,6 +632,19 @@ def cached_files(
         cache_dir = str(cache_dir)
 
     def finalize(resolved_files: list[str | None]) -> list[str] | None:
+        # When verification is on, hash the cached bytes first so a corrupt blob can never be
+        # returned as if it were a valid cache hit. This is the single chokepoint every
+        # successful cached path (including the pinned-commit fast path) goes through.
+        if do_verify:
+            _verify_resolved_files(
+                path_or_repo_id,
+                full_filenames,
+                resolved_files,
+                cache_dir,
+                commit_hash or revision,
+                repo_type,
+                verify_progress,
+            )
         # If there are any missing file and the flag is active, raise
         if any(file is None for file in resolved_files) and _raise_exceptions_for_missing_entries:
             missing_entries = [
@@ -492,6 +653,16 @@ def cached_files(
             # Last escape
             if len(resolved_files) == 1 and missing_entries[0] == os.path.join(subfolder, "config.json"):
                 return None
+            # With verification on, offline missing entries get the same three-way
+            # classification as download-path failures (missing / corrupted / network needed).
+            if do_verify and (local_files_only or is_offline_mode()):
+                raise diagnose_offline_failure(
+                    path_or_repo_id,
+                    full_filenames,
+                    _resolve_cached_revision(path_or_repo_id, commit_hash or revision, cache_dir, repo_type),
+                    cache_dir=cache_dir,
+                    repo_type=repo_type,
+                )
             # Now we raise for missing entries
             revision_ = "main" if revision is None else revision
             msg = (
@@ -530,6 +701,28 @@ def cached_files(
         return finalize(existing_files)
 
     user_agent = http_user_agent(user_agent)
+
+    # Pre-download guards, only when verification is opted in *and* a download may actually
+    # happen. A pure cache hit (the fast path above) stays fully read-only, so verifying an
+    # intact cache on a read-only mount keeps working. The writability probe therefore only
+    # runs where a write would be attempted; disk-space is pre-checked from Hub metadata.
+    # Best effort: any metadata lookup failure makes the size estimate `None` and never blocks.
+    if do_verify and not force_download:
+        try:
+            required_bytes = _estimated_download_size(
+                path_or_repo_id,
+                full_filenames,
+                cache_dir,
+                revision,
+                token,
+                local_files_only,
+            )
+            _preflight_cache_writes(cache_dir, required_bytes)
+        except CacheVerificationError:
+            raise
+        except Exception:
+            logger.debug("Cache write/disk-space preflight for %s could not run.", path_or_repo_id, exc_info=True)
+
     # download the files if needed
     try:
         if len(full_filenames) == 1:
@@ -600,6 +793,18 @@ def cached_files(
             for filename in full_filenames
         ]
         if all(file is not None for file in resolved_files):
+            # Same digest guarantee as the main success path: a network failure must not make us
+            # hand back a corrupt blob without noticing when verification is enabled.
+            if do_verify:
+                _verify_resolved_files(
+                    path_or_repo_id,
+                    full_filenames,
+                    resolved_files,
+                    cache_dir,
+                    commit_hash or revision,
+                    repo_type,
+                    verify_progress,
+                )
             return resolved_files
 
         # Raise based on the flags. Note that we will raise for missing entries at the very end, even when
@@ -617,6 +822,17 @@ def cached_files(
             # Here we only raise if both flags for missing entry and connection errors are True (because it can be raised
             # even when `local_files_only` is True, in which case raising for connections errors only would not make sense)
             elif _raise_exceptions_for_missing_entries:
+                if do_verify:
+                    # Replace the one-size-fits-all message with a classified cause whose
+                    # `reason` attribute distinguishes: cache_missing / cache_corrupted /
+                    # cache_incomplete / network_required_offline.
+                    raise diagnose_offline_failure(
+                        path_or_repo_id,
+                        full_filenames,
+                        _resolve_cached_revision(path_or_repo_id, commit_hash or revision, cache_dir, repo_type),
+                        cache_dir=cache_dir,
+                        repo_type=repo_type,
+                    ) from e
                 raise OSError(
                     f"We couldn't connect to '{constants.ENDPOINT}' to load the files, and couldn't find them in the"
                     f" cached files.\nCheck your internet connection or see how to run the library in offline mode at"
