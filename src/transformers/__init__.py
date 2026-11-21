@@ -159,6 +159,14 @@ _import_structure = {
     ],
     "quantizers": [],
     "testing_utils": [],
+    "tokenization_encoding_config": [
+        "ENCODING_CONFIG_FILE",
+        "EncodingConfig",
+        "EncodingConfigDifference",
+        "EncodingConfigMismatchError",
+        "EncodingConfigMissingError",
+        "fingerprint_vocabulary",
+    ],
     "tokenization_python": ["PreTrainedTokenizer", "PythonBackend"],
     "tokenization_utils": [],
     "tokenization_utils_base": [
@@ -671,6 +679,12 @@ if TYPE_CHECKING:
     from .pytorch_utils import apply_chunking_to_forward as apply_chunking_to_forward
 
     # Tokenization
+    from .tokenization_encoding_config import ENCODING_CONFIG_FILE as ENCODING_CONFIG_FILE
+    from .tokenization_encoding_config import EncodingConfig as EncodingConfig
+    from .tokenization_encoding_config import EncodingConfigDifference as EncodingConfigDifference
+    from .tokenization_encoding_config import EncodingConfigMismatchError as EncodingConfigMismatchError
+    from .tokenization_encoding_config import EncodingConfigMissingError as EncodingConfigMissingError
+    from .tokenization_encoding_config import fingerprint_vocabulary as fingerprint_vocabulary
     from .tokenization_python import PreTrainedTokenizer as PreTrainedTokenizer
     from .tokenization_python import PythonBackend as PythonBackend
     from .tokenization_utils_base import AddedToken as AddedToken

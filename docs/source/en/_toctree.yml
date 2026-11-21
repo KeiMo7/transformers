@@ -62,6 +62,8 @@
       title: Tokenizers
     - local: custom_tokenizers
       title: Customizing tokenizers
+    - local: encoding_config
+      title: Encoding configuration
     - local: tokenizer_summary
       title: Tokenization algorithms
     - local: image_processors

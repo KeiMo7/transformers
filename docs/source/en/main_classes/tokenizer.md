@@ -72,6 +72,41 @@ print(vision_tokenizer.image_token, vision_tokenizer.image_token_id)
 ("<image>", 32000)
 ```
 
+## Encoding configuration
+
+[`PreTrainedTokenizerBase.export_encoding_config`] describes everything that decides which ids a piece of text is
+encoded into: a content fingerprint of the vocabulary, the explicit id of every special token, the normalization /
+pre-tokenization / post-processing / decoding pipeline, the truncation and padding strategy, and the flags that alter
+encoding. Neither the tokenizer class name nor a version string participates in the fingerprint.
+
+It is opt-in and does not change how text is encoded. Use [`PreTrainedTokenizerBase.verify_encoding_config`] to compare
+a tokenizer against an exported config and [`PreTrainedTokenizerBase.compare_encoding_configs`] to list the differing
+settings. Configs can be saved with `save_pretrained(..., save_encoding_config=True)` and are loaded automatically when
+present. See the [encoding config guide](../encoding_config) for the full workflow.
+
+[[autodoc]] EncodingConfig
+    - diff
+    - save
+    - load
+    - build_tokenizer
+    - assert_matches
+
+[[autodoc]] EncodingConfigDifference
+    - describe
+
+[[autodoc]] EncodingConfigMismatchError
+
+[[autodoc]] EncodingConfigMissingError
+
+[[autodoc]] fingerprint_vocabulary
+
+[[autodoc]] PreTrainedTokenizerBase
+    - __call__
+    - export_encoding_config
+    - verify_encoding_config
+    - compare_encoding_configs
+    - all
+
 ## PreTrainedTokenizer
 
 [[autodoc]] PreTrainedTokenizer

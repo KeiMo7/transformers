@@ -1558,6 +1558,8 @@ class MistralCommonBackend(PreTrainedTokenizerBase):
         repo_id: str | None = None,
         private: bool | None = None,
         save_format: str | None = None,
+        save_encoding_config: bool = False,
+        encoding_config_include_vocabulary: bool = False,
         **kwargs,
     ) -> tuple[str, ...]:
         r"""Save the full tokenizer state.
@@ -1594,6 +1596,11 @@ class MistralCommonBackend(PreTrainedTokenizerBase):
                 f"Kwargs {list(kwargs.keys())} are not supported by `MistralCommonBackend.save_pretrained`."
             )
 
+        save_kwargs = {
+            "save_encoding_config": save_encoding_config,
+            "encoding_config_include_vocabulary": encoding_config_include_vocabulary,
+        }
+
         if save_format is not None and save_format not in ("hf", "mistral"):
             raise ValueError(f"Unknown save_format={save_format!r}. Supported values: 'hf', 'mistral'.")
 
@@ -1618,6 +1625,7 @@ class MistralCommonBackend(PreTrainedTokenizerBase):
                 repo_id=repo_id,
                 commit_message=commit_message,
                 private=private,
+                **save_kwargs,
             )
 
         # Default: save in native mistral format.
@@ -1636,6 +1644,13 @@ class MistralCommonBackend(PreTrainedTokenizerBase):
         if not (dest.exists() and os.path.samefile(self._tokenizer_path, dest)):
             shutil.copy(self._tokenizer_path, save_directory)
 
+        saved_files = [str(dest)]
+        if save_encoding_config:
+            from transformers.tokenization_encoding_config import ENCODING_CONFIG_FILE
+
+            config = self.export_encoding_config(include_vocabulary=encoding_config_include_vocabulary)
+            saved_files.append(config.save(save_directory / ENCODING_CONFIG_FILE))
+
         if push_to_hub:
             repo_id = repo_id or str(save_directory).split(os.path.sep)[-1]
             repo_id = hf_api().create_repo(repo_id, token=token, private=private, exist_ok=True).repo_id
@@ -1648,7 +1663,7 @@ class MistralCommonBackend(PreTrainedTokenizerBase):
                 token=token,
             )
 
-        return (str(dest),)
+        return tuple(saved_files)
 
     @staticmethod
     def _get_validation_mode(mode: "str | ValidationMode") -> "ValidationMode":

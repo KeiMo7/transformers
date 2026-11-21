@@ -1179,7 +1179,14 @@ class ProcessorMixin(PushToHubMixin):
         attributes_repr = "\n".join(attributes_repr)
         return f"{self.__class__.__name__}:\n{attributes_repr}\n\n{self.to_json_string()}"
 
-    def save_pretrained(self, save_directory, push_to_hub: bool = False, **kwargs):
+    def save_pretrained(
+        self,
+        save_directory,
+        push_to_hub: bool = False,
+        save_encoding_config: bool = False,
+        encoding_config_include_vocabulary: bool = False,
+        **kwargs,
+    ):
         """
         Saves the attributes of this processor (feature extractor, tokenizer...) in the specified directory so that it
         can be reloaded using the [`~ProcessorMixin.from_pretrained`] method.
@@ -1200,6 +1207,12 @@ class ProcessorMixin(PushToHubMixin):
                 Whether or not to push your model to the Hugging Face model hub after saving it. You can specify the
                 repository you want to push to with `repo_id` (will default to the name of `save_directory` in your
                 namespace).
+            save_encoding_config (`bool`, *optional*, defaults to `False`):
+                Forwarded to the tokenizer's `save_pretrained`: also write an `encoding_config.json` describing the
+                tokenizer's encoding behavior. Off by default, and does not change any of the existing files.
+            encoding_config_include_vocabulary (`bool`, *optional*, defaults to `False`):
+                Forwarded to the tokenizer's `save_pretrained`: embed a compressed copy of the vocabulary in the saved
+                encoding config.
             kwargs (`dict[str, Any]`, *optional*):
                 Additional key word arguments passed along to the [`~utils.PushToHubMixin.push_to_hub`] method.
         """
@@ -1225,12 +1238,16 @@ class ProcessorMixin(PushToHubMixin):
             is_primary = attribute_name == modality
             if modality == "tokenizer":
                 attribute._set_processor_class(self.__class__.__name__)
+                tokenizer_save_kwargs = {
+                    "save_encoding_config": save_encoding_config,
+                    "encoding_config_include_vocabulary": encoding_config_include_vocabulary,
+                }
                 # Save the tokenizer in its own vocab file. The other attributes are saved as part of `processor_config.json`
                 if is_primary:
-                    attribute.save_pretrained(save_directory)
+                    attribute.save_pretrained(save_directory, **tokenizer_save_kwargs)
                 else:
                     # if a model has multiple tokenizers, save the additional tokenizers in their own folders.
-                    attribute.save_pretrained(os.path.join(save_directory, attribute_name))
+                    attribute.save_pretrained(os.path.join(save_directory, attribute_name), **tokenizer_save_kwargs)
             elif attribute._auto_class is not None:
                 custom_object_save(attribute, save_directory, config=attribute)
 
@@ -1805,6 +1822,7 @@ class ProcessorMixin(PushToHubMixin):
         local_files_only: bool = False,
         token: str | bool | None = None,
         revision: str = "main",
+        verify_encoding_config: bool = False,
         **kwargs,
     ) -> SpecificProcessorType:
         r"""
@@ -1838,6 +1856,9 @@ class ProcessorMixin(PushToHubMixin):
         kwargs["cache_dir"] = cache_dir
         kwargs["force_download"] = force_download
         kwargs["local_files_only"] = local_files_only
+        if verify_encoding_config:
+            # Forwarded to the tokenizer sub-processor only (`kwargs` is also used for other sub-processors).
+            kwargs["verify_encoding_config"] = verify_encoding_config
         # Resolve the revision once, so the processor config and all its sub-processors come from the same repo state.
         kwargs["revision"] = resolve_revision(
             pretrained_model_name_or_path,

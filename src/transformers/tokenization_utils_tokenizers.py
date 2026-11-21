@@ -572,6 +572,8 @@ class TokenizersBackend(PreTrainedTokenizerBase):
         filename_prefix: str | None = None,
         push_to_hub: bool = False,
         save_format: str | None = None,
+        save_encoding_config: bool = False,
+        encoding_config_include_vocabulary: bool = False,
         **kwargs,
     ) -> tuple[str, ...]:
         """
@@ -581,7 +583,8 @@ class TokenizersBackend(PreTrainedTokenizerBase):
         Extends [`~tokenization_utils_base.PreTrainedTokenizerBase.save_pretrained`] with
         `save_format` support, for tokenizers converted from a native vocabulary file
         (e.g. Mistral's `tekken.json`). See the base method for `legacy_format`,
-        `filename_prefix`, and `push_to_hub`.
+        `filename_prefix`, `push_to_hub`, `save_encoding_config` and
+        `encoding_config_include_vocabulary`.
 
         Args:
             save_format (`str`, *optional*):
@@ -630,6 +633,8 @@ class TokenizersBackend(PreTrainedTokenizerBase):
             legacy_format=legacy_format,
             filename_prefix=filename_prefix,
             push_to_hub=push_to_hub,
+            save_encoding_config=save_encoding_config,
+            encoding_config_include_vocabulary=encoding_config_include_vocabulary,
             **kwargs,
         )
 

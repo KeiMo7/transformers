@@ -38,6 +38,13 @@ from typing_extensions import TypeVar
 
 from . import __version__
 from .dynamic_module_utils import custom_object_save
+from .tokenization_encoding_config import (
+    ENCODING_CONFIG_FILE,
+    EncodingConfig,
+    EncodingConfigMismatchError,
+    EncodingConfigMissingError,
+    export_encoding_config,
+)
 from .utils import (
     CHAT_TEMPLATE_DIR,
     CHAT_TEMPLATE_FILE,
@@ -1113,9 +1120,125 @@ class PreTrainedTokenizerBase(PushToHubMixin):
         self.backend = kwargs.pop("backend", None)
         self.files_loaded = kwargs.pop("files_loaded", [])
 
+        # Opt-in: an encoding config loaded alongside the tokenizer, used by `verify_encoding_config`. It is never
+        # consulted during encoding, so it cannot change existing behavior.
+        self.encoding_config = None
+
     def _set_processor_class(self, processor_class: str):
         """Sets processor class so it can be serialized in `tokenizer_config.json`."""
         self._processor_class = processor_class
+
+    # ---- Encoding configuration export / verification ----
+    def export_encoding_config(self, include_vocabulary: bool = False) -> EncodingConfig:
+        """
+        Export a complete, content-addressed description of this tokenizer's encoding behavior.
+
+        The export covers the vocabulary content, every special token with its explicit id, the normalization,
+        pre-tokenization, post-processing and decoding pipeline, the truncation/padding strategy, and the flags that
+        change how text is encoded. It is opt-in: nothing is exported unless you call this method, and it does not
+        change how text is encoded.
+
+        Args:
+            include_vocabulary (`bool`, *optional*, defaults to `False`):
+                Embed a compressed copy of the vocabulary so the tokenizer can be rebuilt with
+                [`EncodingConfig.build_tokenizer`] without the original files. This makes the config larger (roughly
+                the size of `tokenizer.json`, compressed) but self-contained. The default compact config is a few
+                kilobytes and is enough to compare and verify configurations.
+
+        Returns:
+            [`EncodingConfig`]: The exported configuration. Use [`EncodingConfig.save`] to write it next to a model.
+
+        Example:
+
+        ```python
+        >>> from transformers import AutoTokenizer
+
+        >>> tokenizer = AutoTokenizer.from_pretrained("google-bert/bert-base-uncased")
+        >>> config = tokenizer.export_encoding_config()
+        >>> config.fingerprint
+        '9b4fd030bd5a647c4ec483c5448cdc51b462d0f713408e8d016340acb35a7624'
+        ```
+        """
+        return export_encoding_config(self, include_vocabulary=include_vocabulary)
+
+    def verify_encoding_config(
+        self,
+        expected: EncodingConfig | Mapping[str, Any] | str | os.PathLike | None = None,
+        *,
+        strict: bool = False,
+    ) -> EncodingConfig:
+        """
+        Verify that this tokenizer's encoding configuration matches an expected one.
+
+        Verification is opt-in and never changes the returned tokenizer's encoding behavior. Its only effect is to
+        compare configurations and, when `strict=True`, raise on mismatch.
+
+        Args:
+            expected (`EncodingConfig`, `dict`, `str` or `os.PathLike`, *optional*):
+                The expected configuration, or a path to one (a directory containing `encoding_config.json`, or the
+                file itself). When omitted, the config is taken from `self.encoding_config` (set when the tokenizer was
+                loaded from a directory that shipped one, or saved with `save_pretrained(..., save_encoding_config=
+                True)`).
+            strict (`bool`, *optional*, defaults to `False`):
+                When `True`, raise [`EncodingConfigMissingError`] if no config can be found and
+                [`EncodingConfigMismatchError`] when the configurations differ. When `False`, a missing config only
+                logs a warning (the tokenizer stays usable) and a mismatch is logged, not raised.
+
+        Returns:
+            [`EncodingConfig`]: The tokenizer's own configuration (never the expected one).
+
+        Raises:
+            EncodingConfigMissingError: If `strict=True` and no expected configuration is available.
+            EncodingConfigMismatchError: If `strict=True` and the configurations differ. The exception's `differences`
+                attribute lists each differing setting.
+        """
+        current = self.export_encoding_config()
+
+        if expected is None:
+            expected = getattr(self, "encoding_config", None)
+        if expected is None:
+            message = (
+                f"{type(self).__name__}: no encoding config to verify against. Pass `expected=` explicitly, or load "
+                "the tokenizer from a directory that contains `encoding_config.json`."
+            )
+            if strict:
+                raise EncodingConfigMissingError(message)
+            logger.warning(message)
+            return current
+
+        expected = EncodingConfig.load(expected)
+
+        # Comparing a compact config against one that embeds a vocabulary: the payload is irrelevant to behavior, and
+        # its digest is derived from the same backend serialization that produced the pipelines.
+        if current.fingerprint != expected.fingerprint or current.diff(expected):
+            message, differences = current.format_mismatch(expected, name=type(self).__name__)
+            if strict:
+                raise EncodingConfigMismatchError(message, differences)
+            logger.warning(message)
+
+        return current
+
+    @staticmethod
+    def compare_encoding_configs(left: EncodingConfig | Mapping[str, Any], right: EncodingConfig | Mapping[str, Any]):
+        """
+        Compare two encoding configurations and return the list of differing settings.
+
+        Each item is an [`EncodingConfigDifference`] with a `path` (e.g. `encoding.pipeline.normalizer.lowercase`),
+        the `left` and `right` values, and an optional note. Differences in concrete settings come before fingerprint
+        digests; a vocabulary digest difference is annotated with the token-id ranges that changed.
+
+        Example:
+
+        ```python
+        >>> from transformers import AutoTokenizer
+
+        >>> left = AutoTokenizer.from_pretrained("google-bert/bert-base-uncased")
+        >>> right = AutoTokenizer.from_pretrained("google-bert/bert-base-uncased", do_lower_case=False)
+        >>> for difference in left.compare_encoding_configs(left.export_encoding_config(), right.export_encoding_config()):
+        ...     print(difference.describe())
+        ```
+        """
+        return EncodingConfig.load(left).diff(EncodingConfig.load(right))
 
     # ---- Special tokens API (moved from SpecialTokensMixin) ----
     def add_special_tokens(
@@ -1966,6 +2089,13 @@ class PreTrainedTokenizerBase(PushToHubMixin):
         # for `sentencepiece` based tokenizer, we pass the sentencepiece model file directly.
         init_kwargs = cls.convert_to_native_format(**init_kwargs)
 
+        # Opt-in encoding-config verification. These are loading controls, not tokenizer attributes, so they must not
+        # be forwarded to `__init__` (and must not end up in `init_kwargs` / `tokenizer_config.json`).
+        verify_encoding_config = kwargs.pop("verify_encoding_config", False)
+        expected_encoding_config = kwargs.pop("encoding_config", None)
+        init_kwargs.pop("verify_encoding_config", None)
+        init_kwargs.pop("encoding_config", None)
+
         try:
             tokenizer = cls(*init_inputs, **init_kwargs)
         except import_protobuf_decode_error():
@@ -1986,6 +2116,35 @@ class PreTrainedTokenizerBase(PushToHubMixin):
                 "Unable to load vocabulary from file. "
                 "Please check that the provided vocabulary is accessible and not corrupted."
             )
+
+        # Attach a config shipped next to a local tokenizer, but never verify unless asked to: loading behavior must
+        # stay exactly the same while `verify_encoding_config` is off.
+        tokenizer.encoding_config = None
+        if _is_local:
+            encoding_config_path = os.path.join(str(pretrained_model_name_or_path), ENCODING_CONFIG_FILE)
+            if os.path.isfile(encoding_config_path):
+                try:
+                    tokenizer.encoding_config = EncodingConfig.load(encoding_config_path)
+                except Exception as error:
+                    # A corrupt config must not prevent the tokenizer from loading. In strict mode the missing config
+                    # is then reported by `verify_encoding_config` below.
+                    logger.warning(
+                        f"{cls.__name__}: could not read {encoding_config_path} ({type(error).__name__}: {error}). "
+                        "Ignoring it."
+                    )
+
+        if verify_encoding_config or expected_encoding_config is not None:
+            try:
+                tokenizer.verify_encoding_config(expected_encoding_config, strict=bool(verify_encoding_config))
+            except (EncodingConfigMissingError, EncodingConfigMismatchError):
+                raise
+            except Exception as error:
+                # Verification must never break a tokenizer that would otherwise work.
+                logger.warning(
+                    f"{cls.__name__}: encoding config verification failed with {type(error).__name__}: {error}. "
+                    "Continuing without verification."
+                )
+
         return tokenizer
 
     @classmethod
@@ -2017,6 +2176,8 @@ class PreTrainedTokenizerBase(PushToHubMixin):
         legacy_format: bool | None = None,
         filename_prefix: str | None = None,
         push_to_hub: bool = False,
+        save_encoding_config: bool = False,
+        encoding_config_include_vocabulary: bool = False,
         **kwargs,
     ) -> tuple[str, ...]:
         """
@@ -2048,6 +2209,15 @@ class PreTrainedTokenizerBase(PushToHubMixin):
                 Whether or not to push your model to the Hugging Face model hub after saving it. You can specify the
                 repository you want to push to with `repo_id` (will default to the name of `save_directory` in your
                 namespace).
+            save_encoding_config (`bool`, *optional*, defaults to `False`):
+                Also write `encoding_config.json` next to the tokenizer files. The config records a content
+                fingerprint of the vocabulary, the explicit id of every special token, the normalization pipeline and
+                the truncation/padding strategy, so another process can verify it encodes text identically. Saving is
+                off by default and does not change any of the existing files.
+            encoding_config_include_vocabulary (`bool`, *optional*, defaults to `False`):
+                Embed a compressed copy of the vocabulary in the saved `encoding_config.json`, so the encoding
+                component can be rebuilt from the config alone without the original vocabulary files. This makes the
+                config much larger (roughly the compressed size of `tokenizer.json`).
             kwargs (`dict[str, Any]`, *optional*):
                 Additional key word arguments passed along to the [`~utils.PushToHubMixin.push_to_hub`] method.
 
@@ -2162,6 +2332,15 @@ class PreTrainedTokenizerBase(PushToHubMixin):
             legacy_format=legacy_format,
             filename_prefix=filename_prefix,
         )
+
+        if save_encoding_config:
+            encoding_config_path = os.path.join(
+                save_directory, (filename_prefix + "-" if filename_prefix else "") + ENCODING_CONFIG_FILE
+            )
+            config = self.export_encoding_config(include_vocabulary=encoding_config_include_vocabulary)
+            config.save(encoding_config_path)
+            logger.info(f"encoding config saved in {encoding_config_path}")
+            save_files = save_files + (encoding_config_path,)
 
         if push_to_hub:
             self._upload_modified_files(
