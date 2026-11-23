@@ -556,6 +556,14 @@ class TrainingArguments:
         restore_callback_states_from_checkpoint (`bool`, *optional*, defaults to `False`):
             Restore callback states from checkpoint when resuming. If `True`, will override callbacks
             passed to Trainer if they exist in the checkpoint.
+        resumable_dataloader (`bool`, *optional*, defaults to `False`):
+            Persist the position of the training data stream in each checkpoint instead of replaying
+            the data on resume. The sampler becomes a pure function of `(seed, epoch)`, which with
+            accelerate's default seedable sampler reproduces the order the run already had; the
+            cursor and the mid gradient-accumulation count are stored next to the optimizer state,
+            and resuming costs the same at step 10 as at step 1 million. Train and every resume of
+            that run must use it. Combining `True` with `ignore_data_skip=True` is refused, since
+            that flag asks for exactly the non-exact behaviour this option removes.
 
         > Reproducibility
 
@@ -1279,6 +1287,12 @@ class TrainingArguments:
             "help": "Whether to restore the callback states from the checkpoint. If `True`, will override callbacks passed to the `Trainer` if they exist in the checkpoint."
         },
     )
+    resumable_dataloader: bool = field(
+        default=False,
+        metadata={
+            "help": "Persist the position of the training data stream in each checkpoint instead of replaying the data on resume."
+        },
+    )
 
     # --- Reproducibility ---
     full_determinism: bool = field(
@@ -1804,6 +1818,19 @@ class TrainingArguments:
             raise ValueError(
                 "--dataloader_prefetch_factor can only be set when data is loaded in a different process, i.e."
                 " when --dataloader_num_workers > 0."
+            )
+
+        if self.resumable_dataloader and self.ignore_data_skip:
+            raise ValueError(
+                "`resumable_dataloader=True` and `ignore_data_skip=True` ask for opposite things: the first makes "
+                "resuming reproduce the uninterrupted run exactly, the second explicitly skips the data position. "
+                "Remove one of them."
+            )
+
+        if self.resumable_dataloader and self.save_only_model:
+            raise ValueError(
+                "`resumable_dataloader=True` needs the data cursor, optimizer, scheduler and RNG state to be "
+                "checkpointed together, but `save_only_model=True` writes weights only. Remove one of them."
             )
 
     def __str__(self):

@@ -1,0 +1,592 @@
+
+tests/trainer/test_trainer.py::TrainerMixedPrecisionTest::test_mixed_bf16 SKIPPED [  2%]tests/trainer/test_trainer.py::TrainerMixedPrecisionTest::test_mixed_bf16 [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerMixedPrecisionTest::test_mixed_fp16 SKIPPED [  4%]tests/trainer/test_trainer.py::TrainerMixedPrecisionTest::test_mixed_fp16 [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerMixedPrecisionTest::test_tf32 SKIPPED [  6%]tests/trainer/test_trainer.py::TrainerMixedPrecisionTest::test_tf32 [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerDDPKwargsTest::test_ddp_static_graph_false_reaches_accelerator PASSED [  8%]tests/trainer/test_trainer.py::TrainerDDPKwargsTest::test_ddp_static_graph_false_reaches_accelerator [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerDDPKwargsTest::test_ddp_static_graph_none_preserves_default PASSED [ 10%]tests/trainer/test_trainer.py::TrainerDDPKwargsTest::test_ddp_static_graph_none_preserves_default [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerDDPKwargsTest::test_ddp_static_graph_true_reaches_accelerator PASSED [ 12%]tests/trainer/test_trainer.py::TrainerDDPKwargsTest::test_ddp_static_graph_true_reaches_accelerator [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_compute_loss_func 
+-------------------------------- live log setup --------------------------------
+WARNING  huggingface_hub.utils._http:_http.py:1023 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+PASSED                                                                   [ 14%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_compute_loss_func [PASSED] 2.17s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_label_smoothing PASSED [ 16%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_label_smoothing [PASSED] 4.12s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_loss_is_scaled_for_ga PASSED [ 18%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_loss_is_scaled_for_ga [PASSED] 1.96s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_num_items_in_batch PASSED [ 20%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_with_num_items_in_batch [PASSED] 3.79s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_without_num_items_in_batch PASSED [ 22%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_grad_norm_without_num_items_in_batch [PASSED] 1.91s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_steps_not_leaked_to_accelerator PASSED [ 24%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_gradient_accumulation_steps_not_leaked_to_accelerator [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_batches_in_training_with_gradient_accumulation SKIPPED [ 26%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_batches_in_training_with_gradient_accumulation [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_causal_lm PASSED [ 28%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_causal_lm [PASSED] 0.41s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_encoder_decoder PASSED [ 30%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_encoder_decoder [PASSED] 0.01s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_keeps_fraction_under_model_parallelism PASSED [ 32%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_keeps_fraction_under_model_parallelism [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_non_causal_lm PASSED [ 34%]tests/trainer/test_trainer.py::TrainerGradientAccumulationTest::test_num_items_in_batch_non_causal_lm [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerGradientCheckpointingTest::test_gradient_checkpointing PASSED [ 36%]tests/trainer/test_trainer.py::TrainerGradientCheckpointingTest::test_gradient_checkpointing [PASSED] 0.49s
+
+tests/trainer/test_trainer.py::TrainerGradientCheckpointingTest::test_gradient_checkpointing_on_a_model_outside_pretrained_model PASSED [ 38%]tests/trainer/test_trainer.py::TrainerGradientCheckpointingTest::test_gradient_checkpointing_on_a_model_outside_pretrained_model [PASSED] 0.22s
+
+tests/trainer/test_trainer.py::TrainerNEFTuneTest::test_neftune PASSED   [ 40%]tests/trainer/test_trainer.py::TrainerNEFTuneTest::test_neftune [PASSED] 0.78s
+
+tests/trainer/test_trainer.py::TrainerLoggingTest::test_eval_loss_inf_nan_filter PASSED [ 42%]tests/trainer/test_trainer.py::TrainerLoggingTest::test_eval_loss_inf_nan_filter [PASSED] 0.05s
+
+tests/trainer/test_trainer.py::TrainerLoggingTest::test_log_level PASSED [ 44%]tests/trainer/test_trainer.py::TrainerLoggingTest::test_log_level [PASSED] 0.83s
+
+tests/trainer/test_trainer.py::TrainerLoggingTest::test_logging_inf_nan_filter PASSED [ 46%]tests/trainer/test_trainer.py::TrainerLoggingTest::test_logging_inf_nan_filter [PASSED] 1.50s
+
+tests/trainer/test_trainer.py::TrainerMetricsTest::test_flos_extraction PASSED [ 48%]tests/trainer/test_trainer.py::TrainerMetricsTest::test_flos_extraction [PASSED] 0.33s
+
+tests/trainer/test_trainer.py::TrainerMetricsTest::test_get_num_trainable_parameters PASSED [ 51%]tests/trainer/test_trainer.py::TrainerMetricsTest::test_get_num_trainable_parameters [PASSED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerMetricsTest::test_include_num_input_tokens_seen FAILED [ 53%]tests/trainer/test_trainer.py::TrainerMetricsTest::test_include_num_input_tokens_seen [FAILED] 7.09s
+
+tests/trainer/test_trainer.py::TrainerMetricsTest::test_mem_metrics PASSED [ 55%]tests/trainer/test_trainer.py::TrainerMetricsTest::test_mem_metrics [PASSED] 2.83s
+
+tests/trainer/test_trainer.py::TrainerStepCountingTest::test_num_train_epochs_in_training PASSED [ 57%]tests/trainer/test_trainer.py::TrainerStepCountingTest::test_num_train_epochs_in_training [PASSED] 0.55s
+
+tests/trainer/test_trainer.py::TrainerStepCountingTest::test_number_of_steps_in_training PASSED [ 59%]tests/trainer/test_trainer.py::TrainerStepCountingTest::test_number_of_steps_in_training [PASSED] 0.88s
+
+tests/trainer/test_trainer.py::TrainerStepCountingTest::test_training_loss PASSED [ 61%]tests/trainer/test_trainer.py::TrainerStepCountingTest::test_training_loss [PASSED] 0.72s
+
+tests/trainer/test_trainer.py::TrainerIntegrationPrerunTest::test_model_init PASSED [ 63%]tests/trainer/test_trainer.py::TrainerIntegrationPrerunTest::test_model_init [PASSED] 1.54s
+
+tests/trainer/test_trainer.py::TrainerIntegrationPrerunTest::test_reproducible_training PASSED [ 65%]tests/trainer/test_trainer.py::TrainerIntegrationPrerunTest::test_reproducible_training [PASSED] 1.31s
+
+tests/trainer/test_trainer.py::TrainerIntegrationPrerunTest::test_trainer_with_datasets PASSED [ 67%]tests/trainer/test_trainer.py::TrainerIntegrationPrerunTest::test_trainer_with_datasets [PASSED] 1.65s
+
+tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_bnb_compile SKIPPED [ 69%]tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_bnb_compile [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_eval SKIPPED [ 71%]tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_eval [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_loss_func_compatibility FAILED [ 73%]tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_loss_func_compatibility [FAILED] 3.31s
+
+tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_train SKIPPED [ 75%]tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_train [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerEarlyStoppingTest::test_early_stopping_callback PASSED [ 77%]tests/trainer/test_trainer.py::TrainerEarlyStoppingTest::test_early_stopping_callback [PASSED] 1.06s
+
+tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_custom_config_patching SKIPPED [ 79%]tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_custom_config_patching [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_custom_config_trainer SKIPPED [ 81%]tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_custom_config_trainer [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_patching SKIPPED [ 83%]tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_patching [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_trainer SKIPPED [ 85%]tests/trainer/test_trainer.py::TrainerLigerKernelTest::test_use_liger_kernel_trainer [SKIPPED] 0.00s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_double_train_wrap_once PASSED [ 87%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_double_train_wrap_once [PASSED] 0.70s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment PASSED [ 89%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment [PASSED] 1.89s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment_composite_config PASSED [ 91%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment_composite_config [PASSED] 1.48s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment_keeps_the_eos_ids_the_config_declares PASSED [ 93%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment_keeps_the_eos_ids_the_config_declares [PASSED] 1.31s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment_keeps_tokens_the_tokenizer_does_not_define PASSED [ 95%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_special_token_alignment_keeps_tokens_the_tokenizer_does_not_define [PASSED] 1.30s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_trainer_works_without_model_config PASSED [ 97%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_trainer_works_without_model_config [PASSED] 2.45s
+
+tests/trainer/test_trainer.py::TrainerIntegrationTest::test_training_arguments_are_left_untouched PASSED [100%]tests/trainer/test_trainer.py::TrainerIntegrationTest::test_training_arguments_are_left_untouched [PASSED] 0.39s
+
+
+=================================== FAILURES ===================================
+____________ TrainerMetricsTest.test_include_num_input_tokens_seen _____________
+
+obj = {'param_groups': [{'amsgrad': False, 'betas': (0.9, 0.999), 'capturable': False, 'decoupled_weight_decay': True, ...},...  [2.0508e-13, 2.5375e-13, 6.0265e-13,  ..., 1.4997e-14, 4.1694e-13,
+         1.0111e-15]]), 'step': tensor(1.)}, ...}}
+f = '/tmp/tmp2uujwwma/checkpoint-1/optimizer.pt'
+pickle_module = <module 'pickle' from '/usr/lib/python3.14/pickle.py'>
+pickle_protocol = 2, _use_new_zipfile_serialization = True
+_disable_byteorder_record = False
+
+    def save(
+        obj: object,
+        f: FileLike,
+        pickle_module: Any = pickle,
+        pickle_protocol: int = DEFAULT_PROTOCOL,
+        _use_new_zipfile_serialization: bool = True,
+        _disable_byteorder_record: bool = False,
+    ) -> None:
+        # Reference: https://github.com/pytorch/pytorch/issues/54354
+        # The first line of this docstring overrides the one Sphinx generates for the
+        # documentation. We need it so that Sphinx doesn't leak `pickle`s path from
+        # the build environment (e.g. `<module 'pickle' from '/leaked/path').
+    
+        """save(obj, f, pickle_module=pickle, pickle_protocol=2, _use_new_zipfile_serialization=True)
+    
+        Saves an object to a disk file.
+    
+        See also: :ref:`saving-loading-tensors`
+    
+        See :ref:`layout-control` for more advanced tools to manipulate a checkpoint.
+    
+        Args:
+            obj: saved object
+            f: a file-like object (has to implement write and flush) or a string or
+               os.PathLike object containing a file name
+            pickle_module: module used for pickling metadata and objects
+            pickle_protocol: can be specified to override the default protocol
+    
+        .. note::
+            A common PyTorch convention is to save tensors using .pt file extension.
+    
+        .. note::
+            PyTorch preserves storage sharing across serialization. See
+            :ref:`preserve-storage-sharing` for more details.
+    
+        .. note::
+            The 1.6 release of PyTorch switched ``torch.save`` to use a new
+            zipfile-based file format. ``torch.load`` still retains the ability to
+            load files in the old format. If for any reason you want ``torch.save``
+            to use the old format, pass the kwarg ``_use_new_zipfile_serialization=False``.
+    
+        Example:
+            >>> # xdoctest: +SKIP("makes cwd dirty")
+            >>> # Save to file
+            >>> x = torch.tensor([0, 1, 2, 3, 4])
+            >>> torch.save(x, "tensor.pt")
+            >>> # Save to io.BytesIO buffer
+            >>> buffer = io.BytesIO()
+            >>> torch.save(x, buffer)
+        """
+        torch._C._log_api_usage_once("torch.save")
+        _check_dill_version(pickle_module)
+        _check_save_filelike(f)
+    
+        if isinstance(f, (str, os.PathLike)):
+            f = os.fspath(f)
+    
+        if _use_new_zipfile_serialization:
+            with _open_zipfile_writer(f) as opened_zipfile:
+>               _save(
+                    obj,
+                    opened_zipfile,
+                    pickle_module,
+                    pickle_protocol,
+                    _disable_byteorder_record,
+                )
+
+../.local/lib/python3.14/site-packages/torch/serialization.py:1003: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = {'param_groups': [{'amsgrad': False, 'betas': (0.9, 0.999), 'capturable': False, 'decoupled_weight_decay': True, ...},...  [2.0508e-13, 2.5375e-13, 6.0265e-13,  ..., 1.4997e-14, 4.1694e-13,
+         1.0111e-15]]), 'step': tensor(1.)}, ...}}
+zip_file = <torch.PyTorchFileWriter object at 0x71bec14480f0>
+pickle_module = <module 'pickle' from '/usr/lib/python3.14/pickle.py'>
+pickle_protocol = 2, _disable_byteorder_record = False
+
+    def _save(
+        obj,
+        zip_file,
+        pickle_module,
+        pickle_protocol,
+        _disable_byteorder_record,
+    ):
+        serialized_storages: dict[str, torch.storage.UntypedStorage] = {}
+        id_map: dict[int, str] = {}
+    
+        # Since loading storages that view the same data with different dtypes is
+        # not supported, we need to keep track of the dtype associated with each
+        # storage data_ptr and throw an error if the dtype is ever different.
+        # TODO: This feature could be added in the future
+        storage_dtypes: dict[int, torch.dtype] = {}
+    
+        def persistent_id(obj):
+            # FIXME: the docs say that persistent_id should only return a string
+            # but torch store returns tuples. This works only in the binary protocol
+            # see
+            # https://docs.python.org/2/library/pickle.html#pickling-and-unpickling-external-objects
+            # https://github.com/python/cpython/blob/master/Lib/pickle.py#L527-L537
+            if isinstance(obj, torch.storage.TypedStorage) or torch.is_storage(obj):
+                if isinstance(obj, torch.storage.TypedStorage):
+                    # TODO: Once we decide to break serialization FC, this case
+                    # can be deleted
+                    storage = obj._untyped_storage
+                    storage_dtype = obj.dtype
+                    storage_type_str = obj._pickle_storage_type()
+                    storage_type = getattr(torch, storage_type_str)
+                    storage_numel = obj._size()
+    
+                else:
+                    storage = obj
+                    storage_dtype = torch.uint8
+                    storage_type = normalize_storage_type(type(obj))
+                    storage_numel = storage.nbytes()
+    
+                # If storage is allocated, ensure that any other saved storages
+                # pointing to the same data all have the same dtype. If storage is
+                # not allocated, don't perform this check
+                if str(storage.device) != "meta" and storage.data_ptr() != 0:
+                    if storage.data_ptr() in storage_dtypes:
+                        if storage_dtype != storage_dtypes[storage.data_ptr()]:
+                            raise RuntimeError(
+                                "Cannot save multiple tensors or storages that "
+                                "view the same data as different types"
+                            )
+                    else:
+                        storage_dtypes[storage.data_ptr()] = storage_dtype
+    
+                storage_key = id_map.setdefault(storage._cdata, str(len(id_map)))
+                if hasattr(obj, "_fake_device") and obj._fake_device is not None:
+                    location = str(obj._fake_device)
+                else:
+                    location = location_tag(storage)
+                serialized_storages[storage_key] = storage
+    
+                return ("storage", storage_type, storage_key, location, storage_numel)
+    
+            return None
+    
+        # Write the pickle data for `obj`
+        data_buf = io.BytesIO()
+    
+        class PyTorchPickler(pickle_module.Pickler):  # type: ignore[name-defined]
+            def persistent_id(self, obj):
+                return persistent_id(obj)  # noqa: F821
+    
+        pickler = PyTorchPickler(data_buf, protocol=pickle_protocol)
+        pickler.dump(obj)
+    
+        # The class def keeps the persistent_id closure alive, leaking memory.
+        del persistent_id
+    
+        data_value = data_buf.getvalue()
+        zip_file.write_record("data.pkl", data_value, len(data_value))
+        # .format_version is used to track
+        #     1. version 1 represents the order of storages being changed from
+        #        lexicographical based on keys to numerically ordered based on keys
+        #     2. version 2 represents including storage_alignment as a record
+        #        within the zipfile
+        zip_file.write_record(".format_version", "1", len("1"))
+        storage_alignment = str(_get_storage_alignment())
+        zip_file.write_record(
+            ".storage_alignment", storage_alignment, len(storage_alignment)
+        )
+    
+        # Write byte order marker
+        if not _disable_byteorder_record:
+            if sys.byteorder not in ["little", "big"]:
+                raise ValueError("Unknown endianness type: " + sys.byteorder)
+    
+            zip_file.write_record("byteorder", sys.byteorder, len(sys.byteorder))
+    
+        # Write each tensor to a file named tensor/the_tensor_key in the zip archive
+        for key in serialized_storages:
+            name = f"data/{key}"
+            storage = serialized_storages[key]
+            num_bytes = storage.nbytes()
+            global _serialization_tls
+            if _serialization_tls.skip_data:
+                zip_file.write_record_metadata(name, num_bytes)
+            else:
+                # given that we copy things around anyway, we might use storage.cpu()
+                # this means to that to get tensors serialized, you need to implement
+                # .cpu() on the underlying Storage
+                if storage.device.type != "cpu":
+                    from torch.utils.serialization import config
+    
+                    if (
+                        config.save.use_pinned_memory_for_d2h
+                        and (
+                            acc := torch.accelerator.current_accelerator(
+                                check_available=True
+                            )
+                        )
+                        is not None
+                        and acc.type == storage.device.type
+                    ):
+                        new_storage = torch.empty(
+                            num_bytes, dtype=torch.uint8, device="cpu", pin_memory=True
+                        ).untyped_storage()
+                        new_storage.copy_(storage)
+                        torch.accelerator.current_stream(storage.device.index).synchronize()
+                        storage = new_storage
+                    else:
+                        storage = storage.cpu()
+                # Now that it is on the CPU we can directly copy it into the zip file
+>               zip_file.write_record(name, storage, num_bytes)
+E               RuntimeError: basic_ios::clear: iostream error
+
+../.local/lib/python3.14/site-packages/torch/serialization.py:1312: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+self = <tests.trainer.test_trainer.TrainerMetricsTest testMethod=test_include_num_input_tokens_seen>
+
+    def test_include_num_input_tokens_seen(self):
+        model = AutoModelForSequenceClassification.from_pretrained("bert-base-cased", num_labels=2)
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
+        tokenizer.pad_token = "[PAD]"
+        model.config.pad_token_id = tokenizer.pad_token_id
+    
+        sentences = ["This is a short sentence.", "This is a much longer sentence that will require padding."]
+        labels = torch.tensor([0, 1])
+    
+        # 1. Test with attention_mask
+        tokenized_dataset_with_mask = tokenizer(sentences, truncation=True, padding="longest", return_tensors="pt")
+        tokenized_dataset_with_mask["labels"] = labels
+        dataset_with_mask = datasets.Dataset.from_dict(tokenized_dataset_with_mask)
+    
+        # 2. Test without attention_mask
+        tokenized_dataset_no_mask = {k: v for k, v in tokenized_dataset_with_mask.items() if k != "attention_mask"}
+        dataset_no_mask = datasets.Dataset.from_dict(tokenized_dataset_no_mask)
+    
+        # 3. Test with no padding information
+        tokenizer_no_pad = AutoTokenizer.from_pretrained("bert-base-cased")
+        tokenizer_no_pad.pad_token = None
+    
+        data_collator = default_data_collator
+    
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # Test case 1: "non_padding" with attention_mask
+            args = TrainingArguments(
+                output_dir=tmp_dir,
+                include_num_input_tokens_seen="non_padding",
+                per_device_train_batch_size=2,
+                max_steps=1,
+            )
+            trainer = Trainer(
+                model=model,
+                args=args,
+                train_dataset=dataset_with_mask,
+                data_collator=data_collator,
+                processing_class=tokenizer,
+            )
+>           trainer.train()
+
+tests/trainer/test_trainer.py:829: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/transformers/trainer.py:1576: in train
+    return inner_training_loop(
+src/transformers/trainer.py:1660: in _inner_training_loop
+    self._run_epoch(
+src/transformers/trainer.py:1958: in _run_epoch
+    self._maybe_log_save_evaluate(
+src/transformers/trainer.py:2285: in _maybe_log_save_evaluate
+    self._save_checkpoint(model, trial)
+src/transformers/trainer.py:3400: in _save_checkpoint
+    self._save_optimizer_and_scheduler(output_dir)
+src/transformers/trainer.py:3572: in _save_optimizer_and_scheduler
+    torch.save(self.optimizer.state_dict(), os.path.join(output_dir, OPTIMIZER_NAME))
+../.local/lib/python3.14/site-packages/torch/serialization.py:1002: in save
+    with _open_zipfile_writer(f) as opened_zipfile:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.serialization._open_zipfile_writer_file object at 0x71beb9753710>
+args = (<class 'RuntimeError'>, RuntimeError('basic_ios::clear: iostream error'), <traceback object at 0x71bec15c5c80>)
+
+    def __exit__(self, *args) -> None:
+>       self.file_like.write_end_of_file()
+E       RuntimeError: [enforce fail at inline_container.cc:672] . unexpected pos 341796096 vs 341795984
+
+../.local/lib/python3.14/site-packages/torch/serialization.py:834: RuntimeError
+----------------------------- Captured stderr call -----------------------------
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 33243.05it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: bert-base-cased
+Key                                        | Status     | 
+-------------------------------------------+------------+-
+cls.predictions.transform.LayerNorm.weight | UNEXPECTED | 
+cls.predictions.transform.dense.bias       | UNEXPECTED | 
+cls.predictions.bias                       | UNEXPECTED | 
+cls.predictions.transform.dense.weight     | UNEXPECTED | 
+cls.seq_relationship.weight                | UNEXPECTED | 
+cls.predictions.transform.LayerNorm.bias   | UNEXPECTED | 
+cls.seq_relationship.bias                  | UNEXPECTED | 
+classifier.bias                            | MISSING    | 
+classifier.weight                          | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:01<00:00,  1.19s/it]
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s][A
+Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  3.27it/s][AWriting model shards: 100%|██████████| 1/1 [00:00<00:00,  3.27it/s]
+______ TrainerTorchCompileTest.test_torch_compile_loss_func_compatibility ______
+
+self = <tests.trainer.test_trainer.TrainerTorchCompileTest testMethod=test_torch_compile_loss_func_compatibility>
+
+    @pytest.mark.torch_compile_test
+    def test_torch_compile_loss_func_compatibility(self):
+        config = LlamaConfig(vocab_size=100, hidden_size=32, num_hidden_layers=3, num_attention_heads=4)
+        tiny_llama = LlamaForCausalLM(config)
+    
+        x = torch.randint(0, 100, (128,))
+        train_dataset = RepeatDataset(x)
+    
+        args = TrainingArguments(
+            self.get_auto_remove_tmp_dir(),
+            per_device_train_batch_size=2,
+            torch_compile=True,
+            max_steps=1,  # compile happens on the first step
+        )
+        trainer = Trainer(model=tiny_llama, args=args, train_dataset=train_dataset)  # noqa
+>       trainer.train()
+
+tests/trainer/test_trainer.py:1096: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/transformers/trainer.py:1576: in train
+    return inner_training_loop(
+src/transformers/trainer.py:1660: in _inner_training_loop
+    self._run_epoch(
+src/transformers/trainer.py:1917: in _run_epoch
+    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/transformers/trainer.py:2090: in training_step
+    loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/transformers/trainer.py:2172: in compute_loss
+    outputs = model(**inputs)
+              ^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_dynamo/eval_frame.py:563: in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/nn/modules/module.py:1783: in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/nn/modules/module.py:1794: in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_dynamo/eval_frame.py:1278: in compile_wrapper
+    raise e.remove_dynamo_frames() from None  # see TORCHDYNAMO_VERBOSE=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/compile_fx.py:1192: in _compile_fx_inner
+    raise InductorError(e, currentframe()).with_traceback(
+../.local/lib/python3.14/site-packages/torch/_inductor/compile_fx.py:1169: in _compile_fx_inner
+    mb_compiled_graph = fx_codegen_and_compile(
+../.local/lib/python3.14/site-packages/torch/_inductor/compile_fx.py:2001: in fx_codegen_and_compile
+    return scheme.codegen_and_compile(gm, example_inputs, inputs_to_check, graph_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/compile_fx.py:1749: in codegen_and_compile
+    compiled_module = graph.compile_to_module()
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/graph.py:3060: in compile_to_module
+    return self._compile_to_module()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/graph.py:3066: in _compile_to_module
+    self.codegen_with_cpp_wrapper() if self.cpp_wrapper else self.codegen()
+                                                             ^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/graph.py:3002: in codegen
+    self.scheduler.codegen()
+../.local/lib/python3.14/site-packages/torch/_inductor/scheduler.py:10015: in codegen
+    self._codegen_partitions()
+../.local/lib/python3.14/site-packages/torch/_inductor/scheduler.py:10167: in _codegen_partitions
+    self._codegen(partition)
+../.local/lib/python3.14/site-packages/torch/_inductor/scheduler.py:10363: in _codegen
+    self.get_backend(device).codegen_node(node)
+../.local/lib/python3.14/site-packages/torch/_inductor/codegen/cpp.py:5904: in codegen_node
+    self.codegen_outer_loop_node(node)
+../.local/lib/python3.14/site-packages/torch/_inductor/codegen/cpp.py:5875: in codegen_outer_loop_node
+    if not try_outer_loop_fusion_with_local_buf(node):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/codegen/cpp.py:5824: in try_outer_loop_fusion_with_local_buf
+    cpp_kernel_proxy = self.kernel_proxy_cls(kernel_group)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/codegen/cpp.py:4396: in __init__
+    self.picked_vec_isa: cpu_vec_isa.VecISA = cpu_vec_isa.pick_vec_isa()
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:675: in pick_vec_isa
+    _valid_vec_isa_list: list[VecISA] = valid_vec_isa_list()
+                                        ^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:662: in valid_vec_isa_list
+    isa_list.extend(
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:665: in <genexpr>
+    if all(flag in _cpu_supported_x86_isa for flag in str(isa).split()) and isa
+                                                                            ^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:402: in __bool__
+    if super().__bool__():
+       ^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:342: in __bool__
+    if super().__bool__():
+       ^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:232: in __bool__
+    return self.__bool__impl(config.cpp.vec_isa_ok)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:242: in __bool__impl
+    return self.check_build(VecISA._avx_code)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:196: in check_build
+    extra=_get_isa_dry_compile_fingerprint(self.build_arch_flags()),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpu_vec_isa.py:30: in _get_isa_dry_compile_fingerprint
+    compiler_info = get_compiler_version_info(get_cpp_compiler())
+                                              ^^^^^^^^^^^^^^^^^^
+../.local/lib/python3.14/site-packages/torch/_inductor/cpp_builder.py:437: in get_cpp_compiler
+    compiler = cpp_compiler_search(search)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+search = (None, 'g++')
+
+    @functools.lru_cache(1)
+    def cpp_compiler_search(search: Sequence[str | None]) -> str:
+        from torch._inductor.codecache import get_lock_dir, LOCK_TIMEOUT
+    
+        for cxx in search:
+            try:
+                if cxx is None:
+                    # gxx package is only available for Linux
+                    # according to https://anaconda.org/conda-forge/gxx/
+                    if sys.platform != "linux":
+                        continue
+                    # Do not install GXX by default
+                    if not os.getenv("TORCH_INDUCTOR_INSTALL_GXX"):
+                        continue
+                    from torch.utils._filelock import FileLock
+    
+                    lock_dir = get_lock_dir()
+                    lock = FileLock(
+                        os.path.join(lock_dir, "g++.lock"), timeout=LOCK_TIMEOUT
+                    )
+                    with lock:
+                        cxx = install_gcc_via_conda()
+                subprocess.check_output(_compiler_command(cxx, "--version"))
+                return cxx
+            except (
+                subprocess.SubprocessError,
+                FileNotFoundError,
+                ImportError,
+                ValueError,
+            ):
+                continue
+>       raise exc.InvalidCxxCompiler
+E       torch._inductor.exc.InductorError: InvalidCxxCompiler: No working C++ compiler found in torch._inductor.config.cpp.cxx: (None, 'g++')
+E       
+E       Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+../.local/lib/python3.14/site-packages/torch/_inductor/cpp_builder.py:146: InductorError
+----------------------------- Captured stderr call -----------------------------
+[transformers] The speedups for torchdynamo mostly come with GPU Ampere or higher and which is not detected here.
+  0%|          | 0/1 [00:00<?, ?it/s]
+=============================== warnings summary ===============================
+../.local/lib/python3.14/site-packages/_pytest/config/__init__.py:1474
+  /home/wll/.local/lib/python3.14/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: env
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+tests/trainer/test_trainer.py: 57 warnings
+  /home/wll/.local/lib/python3.14/site-packages/torch/utils/data/dataloader.py:759: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+    super().__init__(loader)
+
+tests/trainer/test_trainer.py::TrainerGradientCheckpointingTest::test_gradient_checkpointing
+  /home/wll/uid56/tests/trainer/trainer_test_utils.py:378: UserWarning: Using a target size (torch.Size([1])) that is different to the input size (torch.Size([1, 1])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+    loss = nn.functional.mse_loss(logits, labels)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== CI READ-ONLY CACHE FALLBACK: not triggered ==================
+=========================== short test summary info ============================
+FAILED tests/trainer/test_trainer.py::TrainerMetricsTest::test_include_num_input_tokens_seen
+FAILED tests/trainer/test_trainer.py::TrainerTorchCompileTest::test_torch_compile_loss_func_compatibility
+============ 2 failed, 36 passed, 11 skipped, 59 warnings in 56.51s ============

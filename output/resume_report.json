@@ -1,0 +1,246 @@
+{
+  "full_run": {
+    "step_losses": [
+      [
+        1,
+        5.677754878997803
+      ],
+      [
+        2,
+        13.58321762084961
+      ],
+      [
+        3,
+        10.834183692932129
+      ],
+      [
+        4,
+        5.300166606903076
+      ],
+      [
+        5,
+        3.456646203994751
+      ],
+      [
+        6,
+        6.830784320831299
+      ],
+      [
+        7,
+        9.115760803222656
+      ],
+      [
+        8,
+        14.313712120056152
+      ],
+      [
+        9,
+        4.435636043548584
+      ],
+      [
+        10,
+        2.83951997756958
+      ],
+      [
+        11,
+        7.2862043380737305
+      ],
+      [
+        12,
+        2.139941692352295
+      ]
+    ],
+    "params": [
+      0.707374632358551,
+      0.5222650170326233
+    ],
+    "rows": 48
+  },
+  "resume_step": 7,
+  "step_losses": [
+    {
+      "step": 1,
+      "uninterrupted": 5.677754878997803,
+      "resumed": 5.677754878997803,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 2,
+      "uninterrupted": 13.58321762084961,
+      "resumed": 13.58321762084961,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 3,
+      "uninterrupted": 10.834183692932129,
+      "resumed": 10.834183692932129,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 4,
+      "uninterrupted": 5.300166606903076,
+      "resumed": 5.300166606903076,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 5,
+      "uninterrupted": 3.456646203994751,
+      "resumed": 3.456646203994751,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 6,
+      "uninterrupted": 6.830784320831299,
+      "resumed": 6.830784320831299,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 7,
+      "uninterrupted": 9.115760803222656,
+      "resumed": 9.115760803222656,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 8,
+      "uninterrupted": 14.313712120056152,
+      "resumed": 14.313712120056152,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 9,
+      "uninterrupted": 4.435636043548584,
+      "resumed": 4.435636043548584,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 10,
+      "uninterrupted": 2.83951997756958,
+      "resumed": 2.83951997756958,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 11,
+      "uninterrupted": 7.2862043380737305,
+      "resumed": 7.2862043380737305,
+      "abs_diff": 0.0
+    },
+    {
+      "step": 12,
+      "uninterrupted": 2.139941692352295,
+      "resumed": 2.139941692352295,
+      "abs_diff": 0.0
+    }
+  ],
+  "weights_max_abs_diff": 0.0,
+  "sample_manifest": {
+    "before_interruption": [
+      15,
+      92,
+      62,
+      14,
+      64,
+      13,
+      48,
+      84,
+      47,
+      57,
+      45,
+      37,
+      34,
+      68,
+      17,
+      7,
+      1,
+      67,
+      54,
+      10,
+      38,
+      78,
+      58,
+      76,
+      29,
+      21,
+      87,
+      90
+    ],
+    "after_resume": [
+      46,
+      44,
+      35,
+      75,
+      80,
+      11,
+      24,
+      43,
+      18,
+      74,
+      72,
+      91,
+      63,
+      81,
+      4,
+      85,
+      26,
+      89,
+      19,
+      32
+    ],
+    "expected_after_resume": [
+      46,
+      44,
+      35,
+      75,
+      80,
+      11,
+      24,
+      43,
+      18,
+      74,
+      72,
+      91,
+      63,
+      81,
+      4,
+      85,
+      26,
+      89,
+      19,
+      32
+    ],
+    "identical": true,
+    "duplicates_within_epoch": 0,
+    "overlap_before_and_after": [],
+    "rows_seen_total": 48
+  },
+  "resume_cost": {
+    "checkpoint_step": [
+      2,
+      30
+    ],
+    "details": {
+      "2": {
+        "extra_rows_drawn_for_resume": 0,
+        "matches_uninterrupted": 0.0,
+        "resume_seconds": [
+          0.4020984609996958,
+          0.37198388099932345,
+          0.3634577379998518
+        ]
+      },
+      "30": {
+        "extra_rows_drawn_for_resume": 0,
+        "matches_uninterrupted": 0.0,
+        "resume_seconds": [
+          0.23009096099849558,
+          0.25721597300071153,
+          0.26235147699844674
+        ]
+      }
+    }
+  },
+  "refusals": {
+    "optimizer.pt": "ValueError: The checkpoint at /tmp/tmp535vfhrh/checkpoint-broken is incomplete or corrupted, refusing to resume:\n  - missing file: optimizer.pt",
+    "resume_state.pt": "ValueError: The checkpoint at /tmp/tmp4c9e2cbv/checkpoint-broken is incomplete or corrupted, refusing to resume:\n  - missing file: resume_state.pt",
+    "checkpoint_manifest.json": "ValueError: The checkpoint at /tmp/tmp51ha1s7n/checkpoint-broken has no checkpoint_manifest.json, so there is no proof it was written completely. `resumable_dataloader=True` refuses to resume from a checkpoint it cannot verify; resume from a complete checkpoint or disable the option."
+  }
+}

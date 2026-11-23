@@ -117,6 +117,27 @@ from .trainer_pt_utils import (
     safe_globals,
     set_rng_state_for_device,
 )
+from .trainer_resume import (
+    CHECKPOINT_MANIFEST_NAME,
+    RESUME_GRADS_NAME,
+    RESUME_STATE_NAME,
+    ResumableBatchSampler,
+    ResumableStreamingLoader,
+    SeededDataset,
+    TrackingIterableDataset,
+    atomic_checkpoint_dir,
+    batch_sampler_of,
+    capture_gradients,
+    compare_dataset_signatures,
+    dataset_signature,
+    read_manifest,
+    read_resume_state_at,
+    restore_gradients,
+    validate_resume_state,
+    verify_manifest,
+    write_manifest,
+    write_torch_atomic,
+)
 from .trainer_utils import (
     PREFIX_CHECKPOINT_DIR,
     BestRun,
@@ -1033,10 +1054,21 @@ class Trainer:
         }
 
         sampler = None
-        if not isinstance(dataset, torch.utils.data.IterableDataset):
+        resumable = is_training and self.args.resumable_dataloader
+        if isinstance(dataset, torch.utils.data.IterableDataset):
+            if resumable:
+                # Snapshot the streaming position at item boundaries so a checkpoint can name the
+                # source state that reproduces the next batch instead of replaying up to it.
+                dataset = TrackingIterableDataset(dataset)
+        else:
             sampler = sampler_fn(dataset) if sampler_fn is not None else None
+            if resumable:
+                dataset, sampler = self._get_resumable_sampler(dataset, sampler, batch_size)
             if isinstance(sampler, BatchRebalanceSampler):
                 # Pass as `batch_sampler`; it is mutually exclusive with `batch_size`/`sampler`/`drop_last`.
+                dataloader_params.pop("batch_size", None)
+                dataloader_params["batch_sampler"] = sampler
+            elif isinstance(sampler, ResumableBatchSampler):
                 dataloader_params.pop("batch_size", None)
                 dataloader_params["batch_sampler"] = sampler
             else:
@@ -1050,14 +1082,18 @@ class Trainer:
 
         dataloader = self.accelerator.prepare(DataLoader(dataset, **dataloader_params))
 
-        # `BatchRebalanceSampler` is already rank-aware, so the `BatchSamplerShard` wrapper
-        # added by `accelerator.prepare` would re-shard it and silently drop samples. Neutralise
-        # it by making the wrapper a passthrough (num_processes=1)
-        if isinstance(sampler, BatchRebalanceSampler):
+        # `BatchRebalanceSampler` and `ResumableBatchSampler` are already rank-aware, so the
+        # `BatchSamplerShard` wrapper added by `accelerator.prepare` would re-shard them and
+        # silently drop samples. Neutralise it by making the wrapper a passthrough
+        # (num_processes=1).
+        if isinstance(sampler, (BatchRebalanceSampler, ResumableBatchSampler)):
             prepared_bs = getattr(dataloader, "batch_sampler", None)
             if prepared_bs is not None and getattr(prepared_bs, "batch_sampler", None) is sampler:
                 prepared_bs.num_processes = 1
                 prepared_bs.process_index = 0
+
+        if resumable and isinstance(dataset, TrackingIterableDataset):
+            dataloader = ResumableStreamingLoader(dataloader, dataset, num_processes=self._data_parallel_size())
 
         # Store the prepared dataloader for subsequent evaluations if using persistent workers.
         if dataloader_key is not None and self.args.dataloader_persistent_workers:
@@ -1067,6 +1103,51 @@ class Trainer:
                 self._eval_dataloaders = {dataloader_key: dataloader}
 
         return dataloader
+
+    def _data_parallel_size(self) -> int:
+        """Number of data-parallel processes; TP/CP/SP ranks share the same data."""
+        return max(1, self.args.world_size // (self.get_tp_size() * self.get_cp_size() * self.get_sp_size()))
+
+    def _get_resumable_sampler(
+        self, dataset: Dataset, sampler: torch.utils.data.Sampler | None, batch_size: int
+    ) -> tuple[Dataset, ResumableBatchSampler]:
+        """Build the position-tracking sampler used by `resumable_dataloader=True`.
+
+        Only the orders this trainer can name by position are accepted. A sampler whose output
+        depends on mutable internal state cannot be restored without replaying, so it is refused
+        rather than silently resumed incorrectly.
+        """
+        strategy = self.args.train_sampling_strategy
+        if strategy not in ("random", "sequential"):
+            raise ValueError(
+                f"`resumable_dataloader=True` does not support `train_sampling_strategy={strategy!r}`: the batches it "
+                "produces depend on state that a position cannot describe. Use 'random' or 'sequential', or disable "
+                "`resumable_dataloader` to replay the data on resume instead."
+            )
+        expected = SequentialSampler if strategy == "sequential" else RandomSampler
+        if not isinstance(sampler, expected):
+            raise ValueError(
+                f"`resumable_dataloader=True` got a {type(sampler).__name__} for `train_sampling_strategy={strategy!r}`"
+                ". A custom sampler cannot be resumed by position because its order is not reconstructible. Use the "
+                "default sampler or disable `resumable_dataloader`."
+            )
+
+        seed = self.args.data_seed if self.args.data_seed is not None else self.args.seed
+        num_processes = self._data_parallel_size()
+        process_index = self.args.process_index // (self.args.world_size // num_processes)
+
+        dataset = SeededDataset(dataset, seed=seed, process_index=process_index)
+        sampler = ResumableBatchSampler(
+            dataset_len=len(dataset),
+            batch_size=batch_size,
+            drop_last=self.args.dataloader_drop_last,
+            seed=seed,
+            num_processes=num_processes,
+            process_index=process_index,
+            even_batches=self.args.accelerator_config.even_batches,
+            shuffle=strategy != "sequential",
+        )
+        return dataset, sampler
 
     def _get_train_sampler(self, train_dataset: Dataset | None = None) -> torch.utils.data.Sampler | None:
         """Return the training sampler based on `train_sampling_strategy`."""
@@ -1613,6 +1694,8 @@ class Trainer:
             max_steps, num_update_steps_per_epoch, num_train_epochs, resume_from_checkpoint, trial
         )
         model, train_dataloader = self._prepare_for_training(max_steps, train_dataloader, resume_from_checkpoint)
+        if resume_from_checkpoint is not None and self.args.resumable_dataloader:
+            self._load_resume_position(train_dataloader, resume_from_checkpoint, num_update_steps_per_epoch)
 
         # Train!
         logger.info("***** Running training *****")
@@ -1631,7 +1714,9 @@ class Trainer:
             logger.info(
                 f"  Resuming training from checkpoint with epoch {epochs_trained} and global step {self.state.global_step}"
             )
-            if not self.args.ignore_data_skip:
+            if self._resume_is_positional:
+                logger.info("  Restoring the training data position from the checkpoint (no data is replayed).")
+            elif not self.args.ignore_data_skip:
                 logger.info(
                     f"  Fast-forwarding the dataloader past {epochs_trained} epochs and"
                     f" {steps_trained_in_current_epoch} batches to resume from the exact training state."
@@ -1708,9 +1793,139 @@ class Trainer:
                 steps_trained_in_current_epoch = self.state.global_step % num_update_steps_per_epoch
                 steps_trained_in_current_epoch *= self.args.gradient_accumulation_steps
 
+        # The positional path keeps its own cursor, so `steps_trained_in_current_epoch` is unused there.
+        self._resume_window_start = 0
+        self._resume_micro_step = 0
+        self._resume_gradients_from = None
+        self._resume_partial_loss = None
+        self._active_epoch = 0
+        self._active_window_start = None
+        self._active_micro_step = 0
         self.state.init_training_references(self, max_steps, num_train_epochs, trial)
 
         return epochs_trained, steps_trained_in_current_epoch
+
+    @property
+    def _resume_is_positional(self) -> bool:
+        return self.args.resumable_dataloader
+
+    def _load_resume_position(self, train_dataloader, checkpoint: str, num_update_steps_per_epoch: int) -> None:
+        """Validate `checkpoint` and point the data stream at the position it records.
+
+        Everything is checked before anything is applied: a checkpoint whose dataset, cursor, or
+        step counter does not line up is refused outright, because continuing with a partially
+        restored stream would be silently wrong.
+        """
+        # A checkpoint that was interrupted mid-write must never be resumed, even if some of its
+        # files are present and readable.
+        manifest = read_manifest(checkpoint)
+        if manifest is not None:
+            problems = verify_manifest(checkpoint, manifest)
+            if problems:
+                raise ValueError(
+                    f"The checkpoint at {checkpoint} is incomplete or corrupted, refusing to resume:\n  - "
+                    + "\n  - ".join(problems)
+                )
+        elif self._resume_is_positional:
+            raise ValueError(
+                f"The checkpoint at {checkpoint} has no {CHECKPOINT_MANIFEST_NAME}, so there is no proof it was "
+                "written completely. `resumable_dataloader=True` refuses to resume from a checkpoint it cannot "
+                "verify; resume from a complete checkpoint or disable the option."
+            )
+
+        state = self._read_rank_resume_state(checkpoint)
+        validate_resume_state(state, checkpoint)
+        mismatches = compare_dataset_signatures(state["dataset_signature"], dataset_signature(self.train_dataset))
+        if mismatches:
+            raise ValueError(
+                f"The training data in {checkpoint} was not produced from the dataset this run is about to use:\n  - "
+                + "\n  - ".join(mismatches)
+                + "\nRefusing to resume: the saved position would point into different data."
+            )
+
+        target = self._loader_resume_target(train_dataloader)
+        if target is None:
+            raise ValueError(
+                "The training dataloader does not expose a resumable position, so `resumable_dataloader=True` cannot "
+                "guarantee an exact continuation. `get_train_dataloader` was overridden with a loader this option "
+                "does not control; disable `resumable_dataloader` or return a loader built by `Trainer`."
+            )
+
+        global_step = int(self.state.global_step)
+        accumulation = self.args.gradient_accumulation_steps
+        window_start = state["batches_consumed"]
+        micro_step = state.get("micro_step", 0)
+        if state["kind"] == "map":
+            expected_epoch = global_step // num_update_steps_per_epoch
+            if state["epoch"] != expected_epoch:
+                raise ValueError(
+                    f"The checkpoint at {checkpoint} records data epoch {state['epoch']} but global step "
+                    f"{global_step} belongs to epoch {expected_epoch} with {num_update_steps_per_epoch} update steps "
+                    "per epoch. The data cursor and the training step do not belong together."
+                )
+            expected_update_step = global_step % num_update_steps_per_epoch
+            if window_start // accumulation != expected_update_step:
+                raise ValueError(
+                    f"The checkpoint at {checkpoint} records its data cursor at micro-batch {window_start} of epoch "
+                    f"{state['epoch']}, i.e. update step {window_start // accumulation}, but the saved global step "
+                    f"{global_step} is update step {expected_update_step} of that epoch. The cursor and the step "
+                    "counter are inconsistent."
+                )
+        if not 0 <= micro_step < accumulation:
+            raise ValueError(
+                f"The checkpoint at {checkpoint} records micro_step {micro_step}, outside the gradient-accumulation "
+                f"window [0, {accumulation}). The cursor and the accumulation configuration do not belong together."
+            )
+
+        target.load_state_dict(state)
+        self._resume_window_start = window_start
+        self._resume_micro_step = micro_step
+        self._resume_gradients_from = None
+        self._resume_partial_loss = state.get("partial_loss")
+        if micro_step:
+            gradients_path = os.path.join(checkpoint, RESUME_GRADS_NAME)
+            if not os.path.isfile(gradients_path):
+                raise ValueError(
+                    f"The checkpoint at {checkpoint} was taken {micro_step} micro-batch(es) into a gradient-"
+                    "accumulation window but stores no partially accumulated gradients "
+                    f"({RESUME_GRADS_NAME} is missing). Continuing would silently drop those gradients."
+                )
+            self._resume_gradients_from = gradients_path
+        logger.info(
+            f"  Data position restored: epoch {state['epoch']}, batch {window_start}, "
+            f"{micro_step} micro-batch(es) into the update step."
+        )
+
+    def _read_rank_resume_state(self, checkpoint: str) -> dict:
+        path = os.path.join(checkpoint, RESUME_STATE_NAME)
+        if self.args.world_size > 1:
+            rank_path = os.path.join(checkpoint, f"resume_state_{self.args.process_index}.pt")
+            # A single-process checkpoint has no per-rank files; use it for every rank in that case.
+            if os.path.isfile(rank_path):
+                path = rank_path
+        if not os.path.isfile(path):
+            raise ValueError(
+                f"`resumable_dataloader=True` requires the training data position stored in {RESUME_STATE_NAME}, but "
+                f"{checkpoint} does not contain it (looked for {os.path.basename(path)}). This checkpoint was written "
+                "without the option, so exact resumption is impossible. Resume from a checkpoint written with "
+                "`resumable_dataloader=True`, or disable the option to replay the data instead."
+            )
+        return read_resume_state_at(path)
+
+    def _loader_resume_target(self, train_dataloader):
+        if isinstance(train_dataloader, ResumableStreamingLoader):
+            return train_dataloader
+        return batch_sampler_of(train_dataloader)
+
+    def _restore_partial_window(self) -> None:
+        """Reload the partially accumulated gradients saved mid-way through a window."""
+        path = self._resume_gradients_from
+        gradients = torch.load(path, map_location="cpu", weights_only=True)
+        restore_gradients(self.model, gradients)
+        self._resume_gradients_from = None
+        partial_loss = getattr(self, "_resume_partial_loss", None)
+        if partial_loss is not None:
+            self._tr_loss += torch.tensor(partial_loss, device=self._tr_loss.device)
 
     def _prepare_for_training(self, max_steps, train_dataloader, resume_from_checkpoint):
         """Wrap model, create optimizer and scheduler, and run accelerator.prepare. Returns (model, train_dataloader)."""
@@ -1847,8 +2062,18 @@ class Trainer:
 
         # Handle resumption from checkpoint: skip already-trained batches in the resumed epoch
         num_update_steps_trained = 0
+        micro_skip = 0
         if epoch == epochs_trained and resume_from_checkpoint is not None:
-            if steps_trained_in_current_epoch > 0 and not self.args.ignore_data_skip:
+            if self._resume_is_positional:
+                # The cursor is already at the micro-batch that follows the checkpoint; only a
+                # checkpoint inside an accumulation window needs a partial-window restore.
+                num_update_steps_trained = self._resume_window_start // self.args.gradient_accumulation_steps
+                micro_skip = self._resume_micro_step
+                step = self._resume_window_start + micro_skip - 1
+                if self._resume_gradients_from is not None:
+                    self._restore_partial_window()
+                self._load_rng_state(resume_from_checkpoint)
+            elif steps_trained_in_current_epoch > 0 and not self.args.ignore_data_skip:
                 train_dataloader = skip_first_batches(train_dataloader, steps_trained_in_current_epoch)
                 step = steps_trained_in_current_epoch - 1
                 num_update_steps_trained = steps_trained_in_current_epoch // self.args.gradient_accumulation_steps
@@ -1881,8 +2106,23 @@ class Trainer:
             batch_samples, num_items_in_batch = self.get_batch_samples(epoch_iterator, num_batches, self.args.device)
 
             # This is used to correctly scale the loss when the last accumulation step has fewer batches.
-            # Not used if `num_items_in_batch` is not None.
+            # Not used if `num_items_in_batch` is not None. It counts the whole window, because the
+            # restoring process re-applies the skipped micro-batches' gradients from the checkpoint.
             self.current_gradient_accumulation_steps = len(batch_samples)
+
+            # A checkpoint inside a gradient-accumulation window already consumed the first
+            # `micro_skip` micro-batches of this update step; drawing them again would duplicate
+            # samples and double-count their gradients.
+            if micro_skip:
+                batch_samples = batch_samples[micro_skip:]
+                num_items_in_batch = self._get_num_items_in_batch(batch_samples, self.args.device)
+                micro_skip = 0
+
+            # Position of the first micro-batch of this update step, and how far into it the saved
+            # checkpoint sits. A checkpoint writes these so a resume can name the exact boundary.
+            self._active_epoch = epoch
+            self._active_window_start = update_step * self.args.gradient_accumulation_steps
+            self._active_micro_step = 0
 
             # need to sync after if we skipped the batches in `get_batch_samples` for shuffle order reason
             if rng_to_sync:
@@ -1939,6 +2179,9 @@ class Trainer:
                         grad_norm = self._clip_grad_norm(model)
                     grad_norm = self._get_grad_norm(model, grad_norm=grad_norm)
 
+                    # The optimizer update has not happened yet, so a checkpoint requested from the
+                    # callbacks below sits between two windows; it is still a consistent position.
+                    self._active_micro_step = 0
                     self.control = self.callback_handler.on_pre_optimizer_step(self.args, self.state, self.control)
                     self.optimizer.step()
                     self.control = self.callback_handler.on_optimizer_step(self.args, self.state, self.control)
@@ -1954,6 +2197,9 @@ class Trainer:
                     model.zero_grad()
                     self.state.global_step += 1
                     self.state.epoch = epoch + (step + 1) / steps_in_epoch
+                    # The window is applied, so the next checkpoint resumes at the following one.
+                    self._active_window_start = (update_step + 1) * self.args.gradient_accumulation_steps
+                    self._active_micro_step = 0
                     self.control = self.callback_handler.on_step_end(self.args, self.state, self.control)
                     self._maybe_log_save_evaluate(
                         self._tr_loss,
@@ -1966,10 +2212,15 @@ class Trainer:
                         learning_rate=learning_rate,
                     )
                 else:
+                    self._active_micro_step = i + 1
                     self.control = self.callback_handler.on_substep_end(self.args, self.state, self.control)
 
                 if self.control.should_epoch_stop or self.control.should_training_stop:
                     break
+            # A JIT checkpoint taken from `on_epoch_end`/`on_step_end` callbacks reads these; clear
+            # them so an out-of-loop save records "nothing consumed in this window".
+            self._active_window_start = None
+            self._active_micro_step = 0
             if self.control.should_epoch_stop or self.control.should_training_stop:
                 break
 
@@ -3373,7 +3624,41 @@ class Trainer:
             self.store_flos()
 
         run_dir = self._get_output_dir(trial=trial)
-        output_dir = os.path.join(run_dir, checkpoint_folder)
+        target_dir = os.path.join(run_dir, checkpoint_folder)
+        resumable = self.args.resumable_dataloader and not self.args.save_only_model
+
+        with atomic_checkpoint_dir(
+            target_dir,
+            enabled=resumable,
+            is_main=self.args.should_save,
+            barrier=self._checkpoint_barrier,
+        ) as output_dir:
+            self._write_checkpoint_files(model, trial, run_dir, output_dir)
+
+        if self.args.push_to_hub:
+            self._push_from_checkpoint(target_dir)
+
+        # Maybe delete some older checkpoints.
+        if self.args.should_save:
+            # we use mtime as default, filesystems without mtime support will be detected in `sort_checkpoints`
+            rotate_checkpoints(
+                output_dir=run_dir,
+                save_total_limit=self.args.save_total_limit,
+                best_model_checkpoint=self.state.best_model_checkpoint,
+                use_mtime=True,
+            )
+
+    def _checkpoint_barrier(self) -> None:
+        """Keep ranks together around the checkpoint directory rename."""
+        if self.args.parallel_mode != ParallelMode.DISTRIBUTED:
+            return
+        if is_torch_xla_available():
+            xm.rendezvous("checkpoint_manifest")
+        else:
+            dist.barrier()
+
+    def _write_checkpoint_files(self, model, trial, run_dir, output_dir) -> None:
+        """Write every file of a checkpoint into `output_dir`, manifest last."""
         self.save_model(output_dir, _internal_call=True)
 
         if (
@@ -3401,6 +3686,8 @@ class Trainer:
             self._save_scaler(output_dir)
             # Save RNG state
             self._save_rng_state(output_dir)
+            if self.args.resumable_dataloader:
+                self._save_resume_position(output_dir)
 
         # Save the Trainer state
         if self.args.should_save:
@@ -3415,19 +3702,63 @@ class Trainer:
                 else:
                     self.state.stateful_callbacks[cb_name] = cb_state
             self.state.save_to_json(os.path.join(output_dir, TRAINER_STATE_NAME))
+            if self.args.resumable_dataloader:
+                # Written last: a checkpoint without this marker is treated as an interrupted write.
+                write_manifest(output_dir, self.state.global_step)
 
-        if self.args.push_to_hub:
-            self._push_from_checkpoint(output_dir)
+    def _save_resume_position(self, output_dir: str) -> None:
+        """Persist the data cursor and, mid-window, the partially accumulated gradients.
 
-        # Maybe delete some older checkpoints.
-        if self.args.should_save:
-            # we use mtime as default, filesystems without mtime support will be detected in `sort_checkpoints`
-            rotate_checkpoints(
-                output_dir=run_dir,
-                save_total_limit=self.args.save_total_limit,
-                best_model_checkpoint=self.state.best_model_checkpoint,
-                use_mtime=True,
+        They go into the same checkpoint directory as the optimizer, scheduler and RNG state, so a
+        resume can never pair a cursor from one checkpoint with an optimizer from another.
+        """
+        loader = self.callback_handler.train_dataloader
+        target = self._loader_resume_target(loader) if loader is not None else None
+        if target is None:
+            raise RuntimeError(
+                "`resumable_dataloader=True` was enabled but the active training dataloader has no data cursor to "
+                "save. This means the loader was swapped after training started; only checkpoints taken through "
+                "`Trainer`'s own loader can be resumed."
             )
+
+        streaming = isinstance(target, ResumableStreamingLoader)
+        window_start = getattr(self, "_active_window_start", None)
+        if streaming:
+            # The streaming cursor is named by micro-batches trained in the current epoch; the
+            # counter restarts at every epoch, so no epoch normalization is needed.
+            if window_start is None:
+                # Saved outside the epoch loop: record whatever the loader has drawn so far.
+                state = target.state_dict(0)
+            else:
+                state = target.state_dict(window_start)
+            state["micro_step"] = 0 if window_start is None else getattr(self, "_active_micro_step", 0)
+        else:
+            state = target.state_dict()
+            if window_start is not None:
+                state["epoch"] = getattr(self, "_active_epoch", state["epoch"])
+                state["batches_consumed"] = window_start
+                state["micro_step"] = getattr(self, "_active_micro_step", 0)
+            else:
+                state["micro_step"] = 0
+            batches_per_epoch = len(target)
+            if batches_per_epoch and state["batches_consumed"] >= batches_per_epoch:
+                # The epoch is over; the next draw belongs to the following epoch.
+                state["epoch"] += 1
+                state["batches_consumed"] = 0
+                state["micro_step"] = 0
+        state["dataset_signature"] = dataset_signature(self.train_dataset)
+
+        suffix = f"_{self.args.process_index}" if self.args.world_size > 1 else ""
+        gradients_path = os.path.join(output_dir, f"resume_grads{suffix}.pt")
+        if state["micro_step"]:
+            # The logged loss of the interrupted update step averages every micro-batch of the
+            # window; carry the part already accumulated so the resumed step logs the same number.
+            state["partial_loss"] = float(self._tr_loss.detach().cpu())
+        write_torch_atomic(os.path.join(output_dir, f"resume_state{suffix}.pt"), state)
+        if state["micro_step"]:
+            write_torch_atomic(gradients_path, capture_gradients(self.model))
+        elif self.args.should_save and os.path.isfile(gradients_path):
+            os.remove(gradients_path)
 
     def _determine_best_metric(self, metrics: dict[str, float], trial: "optuna.Trial | dict[str, Any] | None") -> bool:
         """

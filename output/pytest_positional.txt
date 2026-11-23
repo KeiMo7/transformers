@@ -1,0 +1,54 @@
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_augmentation_randomness_is_reproduced PASSED [  5%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_augmentation_randomness_is_reproduced [PASSED] 0.58s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_checkpoint_write_is_atomic PASSED [ 11%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_checkpoint_write_is_atomic [PASSED] 0.27s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_cursor_beyond_epoch_is_refused PASSED [ 17%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_cursor_beyond_epoch_is_refused [PASSED] 0.56s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_datetime_dataset_mismatch_is_reported PASSED [ 23%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_datetime_dataset_mismatch_is_reported [PASSED] 0.48s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_incompatible_flags_are_refused PASSED [ 29%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_incompatible_flags_are_refused [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_missing_component_is_refused_with_reason 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_missing_component_is_refused_with_reason PASSED [ 35%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_missing_component_is_refused_with_reason [PASSED] 1.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_non_positional_sampling_strategy_is_refused 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_non_positional_sampling_strategy_is_refused PASSED [ 41%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_non_positional_sampling_strategy_is_refused [PASSED] 0.01s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_option_off_keeps_the_existing_behaviour PASSED [ 47%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_option_off_keeps_the_existing_behaviour [PASSED] 0.47s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_overridden_dataloader_is_refused PASSED [ 52%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_overridden_dataloader_is_refused [PASSED] 0.22s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_cost_does_not_grow_with_progress PASSED [ 58%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_cost_does_not_grow_with_progress [PASSED] 0.87s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_inside_gradient_accumulation_window PASSED [ 64%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_inside_gradient_accumulation_window [PASSED] 0.88s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_matches_uninterrupted_run_at_every_step 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_matches_uninterrupted_run_at_every_step PASSED [ 70%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_matches_uninterrupted_run_at_every_step [PASSED] 2.47s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_exact_and_duplicate_free PASSED [ 76%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_exact_and_duplicate_free [PASSED] 0.66s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_unchanged_by_enabling_the_option 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_unchanged_by_enabling_the_option PASSED [ 82%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_unchanged_by_enabling_the_option [PASSED] 1.13s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_inside_gradient_accumulation_window PASSED [ 88%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_inside_gradient_accumulation_window [PASSED] 0.74s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_matches 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_matches PASSED [ 94%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_matches [PASSED] 0.75s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_without_state_dict_is_refused PASSED [100%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_without_state_dict_is_refused [PASSED] 0.36s
+
+
+=============================== warnings summary ===============================
+../.local/lib/python3.14/site-packages/_pytest/config/__init__.py:1474
+  /home/wll/.local/lib/python3.14/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: env
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+tests/trainer/test_trainer_checkpointing.py: 32 warnings
+  /home/wll/.local/lib/python3.14/site-packages/torch/utils/data/dataloader.py:759: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+    super().__init__(loader)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== CI READ-ONLY CACHE FALLBACK: not triggered ==================
+===== 17 passed, 58 deselected, 33 warnings, 16 subtests passed in 11.81s ======

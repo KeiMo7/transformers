@@ -1,0 +1,411 @@
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_can_resume_training_lm SKIPPED [  0%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_can_resume_training_lm [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointSaveTest::test_save_checkpoints PASSED [  1%]tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointSaveTest::test_save_checkpoints [PASSED] 0.52s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointSaveTest::test_save_collator_tokenizer_by_default PASSED [  1%]tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointSaveTest::test_save_collator_tokenizer_by_default [PASSED] 2.33s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_can_resume_training PASSED [  2%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_can_resume_training [PASSED] 1.59s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_multiple_peft_adapters 
+-------------------------------- live log call ---------------------------------
+WARNING  huggingface_hub.utils._http:_http.py:1023 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+PASSED                                                                   [  2%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_multiple_peft_adapters [PASSED] 8.16s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_peft_root_adapter_restored_with_adapter_subfolders PASSED [  3%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_peft_root_adapter_restored_with_adapter_subfolders [PASSED] 2.32s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_checkpoint PASSED [  3%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_checkpoint [PASSED] 1.21s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_different_batch_size PASSED [  4%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_different_batch_size [PASSED] 0.56s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_frozen_params PASSED [  4%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_frozen_params [PASSED] 0.75s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_gradient_accumulation PASSED [  5%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_gradient_accumulation [PASSED] 0.61s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_randomness SKIPPED [  5%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_randomness [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_shard_checkpoint PASSED [  6%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_resume_training_with_shard_checkpoint [PASSED] 1.07s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_training_with_resume_from_checkpoint_false PASSED [  6%]tests/trainer/test_trainer_checkpointing.py::TrainerResumeTrainingTest::test_training_with_resume_from_checkpoint_false [PASSED] 0.30s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_eval_oom_fails_fast PASSED [  7%]tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_eval_oom_fails_fast [PASSED] 0.80s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_finder PASSED [  7%]tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_finder [PASSED] 1.95s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_with_deepspeed SKIPPED [  8%]tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_with_deepspeed [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_with_resume_from_checkpoint PASSED [  8%]tests/trainer/test_trainer_checkpointing.py::TrainerAutoBatchSizeTest::test_auto_batch_size_with_resume_from_checkpoint [PASSED] 2.16s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointRotationTest::test_checkpoint_rotation PASSED [  9%]tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointRotationTest::test_checkpoint_rotation [PASSED] 0.01s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointRotationTest::test_checkpoint_sorting PASSED [  9%]tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointRotationTest::test_checkpoint_sorting [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointRotationTest::test_compare_trainer_and_checkpoint_args_logging PASSED [ 10%]tests/trainer/test_trainer_checkpointing.py::TrainerCheckpointRotationTest::test_compare_trainer_and_checkpoint_args_logging [PASSED] 0.58s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerInterruptedTrainingTest::test_resume_batch_order PASSED [ 10%]tests/trainer/test_trainer_checkpointing.py::TrainerInterruptedTrainingTest::test_resume_batch_order [PASSED] 0.62s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerInterruptedTrainingTest::test_resume_from_interrupted_training PASSED [ 11%]tests/trainer/test_trainer_checkpointing.py::TrainerInterruptedTrainingTest::test_resume_from_interrupted_training [PASSED] 0.57s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_augmentation_randomness_is_reproduced PASSED [ 11%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_augmentation_randomness_is_reproduced [PASSED] 0.60s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_checkpoint_write_is_atomic PASSED [ 12%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_checkpoint_write_is_atomic [PASSED] 0.28s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_cursor_beyond_epoch_is_refused PASSED [ 12%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_cursor_beyond_epoch_is_refused [PASSED] 0.58s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_datetime_dataset_mismatch_is_reported PASSED [ 13%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_datetime_dataset_mismatch_is_reported [PASSED] 0.56s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_incompatible_flags_are_refused PASSED [ 13%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_incompatible_flags_are_refused [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_missing_component_is_refused_with_reason 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_missing_component_is_refused_with_reason PASSED [ 14%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_missing_component_is_refused_with_reason [PASSED] 1.11s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_non_positional_sampling_strategy_is_refused 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_non_positional_sampling_strategy_is_refused PASSED [ 15%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_non_positional_sampling_strategy_is_refused [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_option_off_keeps_the_existing_behaviour PASSED [ 15%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_option_off_keeps_the_existing_behaviour [PASSED] 0.55s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_overridden_dataloader_is_refused PASSED [ 16%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_overridden_dataloader_is_refused [PASSED] 0.26s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_cost_does_not_grow_with_progress PASSED [ 16%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_cost_does_not_grow_with_progress [PASSED] 0.95s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_inside_gradient_accumulation_window PASSED [ 17%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_inside_gradient_accumulation_window [PASSED] 0.93s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_matches_uninterrupted_run_at_every_step 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_matches_uninterrupted_run_at_every_step PASSED [ 17%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_resume_matches_uninterrupted_run_at_every_step [PASSED] 2.52s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_exact_and_duplicate_free PASSED [ 18%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_exact_and_duplicate_free [PASSED] 0.55s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_unchanged_by_enabling_the_option 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_unchanged_by_enabling_the_option PASSED [ 18%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeTest::test_sample_order_is_unchanged_by_enabling_the_option [PASSED] 1.14s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_inside_gradient_accumulation_window PASSED [ 19%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_inside_gradient_accumulation_window [PASSED] 0.97s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_matches 
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_matches PASSED [ 19%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_resume_matches [PASSED] 0.84s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_without_state_dict_is_refused PASSED [ 20%]tests/trainer/test_trainer_checkpointing.py::TrainerPositionalResumeStreamingTest::test_streaming_without_state_dict_is_refused [PASSED] 0.28s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_checkpoint_manager_initialization PASSED [ 20%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_checkpoint_manager_initialization [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_execute_jit_checkpoint PASSED [ 21%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_execute_jit_checkpoint [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_execute_jit_checkpoint_sentinel_file_cleanup PASSED [ 21%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_execute_jit_checkpoint_sentinel_file_cleanup [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_execute_jit_checkpoint_with_exception PASSED [ 22%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_execute_jit_checkpoint_with_exception [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_integration_with_trainer PASSED [ 22%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_integration_with_trainer [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_initialization PASSED [ 23%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_initialization [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_epoch_end PASSED [ 23%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_epoch_end [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_pre_optimizer_step PASSED [ 24%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_pre_optimizer_step [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_step_begin PASSED [ 24%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_step_begin [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_step_end PASSED [ 25%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_step_end [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_train_end PASSED [ 25%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_on_train_end [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_set_trainer_disabled PASSED [ 26%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_set_trainer_disabled [PASSED] 0.07s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_set_trainer_enabled PASSED [ 26%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_jit_checkpoint_callback_set_trainer_enabled [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_kill_wait_period PASSED [ 27%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_kill_wait_period [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_signal_handler_setup PASSED [ 27%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_signal_handler_setup [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_sigterm_handler_flow PASSED [ 28%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_sigterm_handler_flow [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_toggle_checkpoint_flag PASSED [ 29%]tests/trainer/test_trainer_checkpointing.py::JITCheckpointTest::test_toggle_checkpoint_flag [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_feature_extractor PASSED [ 29%]tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_feature_extractor [PASSED] 0.47s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_image_processor PASSED [ 30%]tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_image_processor [PASSED] 0.32s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_processor PASSED [ 30%]tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_processor [PASSED] 2.78s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_tokenizer PASSED [ 31%]tests/trainer/test_trainer_checkpointing.py::TrainerSavingTest::test_trainer_saves_tokenizer [PASSED] 0.98s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_best_model_checkpoint_behavior PASSED [ 31%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_best_model_checkpoint_behavior [PASSED] 1.90s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_at_end PASSED [ 32%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_at_end [PASSED] 1.56s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_from_safetensors PASSED [ 32%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_from_safetensors [PASSED] 0.58s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_with_save PASSED [ 33%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_with_save [PASSED] 0.56s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_with_save_best PASSED [ 33%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_load_best_model_with_save_best [PASSED] 0.28s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_metric_for_best_model_behavior PASSED [ 34%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_metric_for_best_model_behavior [PASSED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_resume_from_checkpoint_with_stale_best_model_checkpoint PASSED [ 34%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_resume_from_checkpoint_with_stale_best_model_checkpoint [PASSED] 0.58s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_save_best_checkpoint PASSED [ 35%]tests/trainer/test_trainer_checkpointing.py::TrainerBestModelTest::test_save_best_checkpoint [PASSED] 0.57s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub SKIPPED [ 35%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_in_organization SKIPPED [ 36%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_in_organization [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_tags SKIPPED [ 36%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_tags [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_revision SKIPPED [ 37%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_revision [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_saves_each_epoch SKIPPED [ 37%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_saves_each_epoch [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_saves_each_n_steps SKIPPED [ 38%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_saves_each_n_steps [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_tensorboard_logs SKIPPED [ 38%]tests/trainer/test_trainer_checkpointing.py::TrainerIntegrationWithHubTester::test_push_to_hub_with_tensorboard_logs [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_add_callback_by_class PASSED [ 39%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_add_callback_by_class [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_add_callback_by_instance PASSED [ 39%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_add_callback_by_instance [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_callback_can_stop_training PASSED [ 40%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_callback_can_stop_training [PASSED] 0.28s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_callback_receives_control_flags PASSED [ 40%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_callback_receives_control_flags [PASSED] 0.28s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_custom_callback_added_at_init PASSED [ 41%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_custom_callback_added_at_init [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_default_callbacks_are_present PASSED [ 41%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_default_callbacks_are_present [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_duplicate_callback_warning PASSED [ 42%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_duplicate_callback_warning [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_event_flow PASSED [ 43%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_event_flow [PASSED] 2.23s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_no_duplicate_save_on_epoch_strategy PASSED [ 43%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_no_duplicate_save_on_epoch_strategy [PASSED] 0.30s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_on_push_begin_event PASSED [ 44%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_on_push_begin_event [PASSED] 0.27s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_pop_callback_returns_instance PASSED [ 44%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_pop_callback_returns_instance [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_printer_callback_when_tqdm_disabled PASSED [ 45%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_printer_callback_when_tqdm_disabled [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_remove_callback_by_class PASSED [ 45%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_remove_callback_by_class [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_remove_callback_by_instance PASSED [ 46%]tests/trainer/test_trainer_callback.py::TrainerCallbackTest::test_remove_callback_by_instance [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_early_stopping_state_persists PASSED [ 46%]tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_early_stopping_state_persists [PASSED] 0.59s
+
+tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_missing_stateful_callback_warning PASSED [ 47%]tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_missing_stateful_callback_warning [PASSED] 0.65s
+
+tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_mixed_stateful_and_regular_callbacks PASSED [ 47%]tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_mixed_stateful_and_regular_callbacks [PASSED] 0.73s
+
+tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_multiple_instances_of_same_stateful_callback PASSED [ 48%]tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_multiple_instances_of_same_stateful_callback [PASSED] 0.62s
+
+tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_trainer_control_state_persists PASSED [ 48%]tests/trainer/test_trainer_callback.py::StatefulCallbackTest::test_trainer_control_state_persists [PASSED] 0.31s
+
+tests/trainer/test_trainer_callback.py::TrainerStateTest::test_compute_steps_from_integers PASSED [ 49%]tests/trainer/test_trainer_callback.py::TrainerStateTest::test_compute_steps_from_integers [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerStateTest::test_compute_steps_from_proportion PASSED [ 49%]tests/trainer/test_trainer_callback.py::TrainerStateTest::test_compute_steps_from_proportion [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerStateTest::test_log_history_initialized PASSED [ 50%]tests/trainer/test_trainer_callback.py::TrainerStateTest::test_log_history_initialized [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerStateTest::test_save_and_load_json PASSED [ 50%]tests/trainer/test_trainer_callback.py::TrainerStateTest::test_save_and_load_json [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerStateTest::test_stateful_callbacks_initialized PASSED [ 51%]tests/trainer/test_trainer_callback.py::TrainerStateTest::test_stateful_callbacks_initialized [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::SwanLabCallbackTest::test_setup_does_not_forward_id_or_resume_by_default PASSED [ 51%]tests/trainer/test_trainer_callback.py::SwanLabCallbackTest::test_setup_does_not_forward_id_or_resume_by_default [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::SwanLabCallbackTest::test_setup_forwards_id_and_resume_from_env PASSED [ 52%]tests/trainer/test_trainer_callback.py::SwanLabCallbackTest::test_setup_forwards_id_and_resume_from_env [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrackioCallbackTest::test_on_log_after_train_end_reinitializes_trackio PASSED [ 52%]tests/trainer/test_trainer_callback.py::TrackioCallbackTest::test_on_log_after_train_end_reinitializes_trackio [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_get_token_caches_token PASSED [ 53%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_get_token_caches_token [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_log_captures_numeric_metrics PASSED [ 53%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_log_captures_numeric_metrics [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_step_end_reports_progress PASSED [ 54%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_step_end_reports_progress [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_step_end_skips_when_not_initialized PASSED [ 54%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_step_end_skips_when_not_initialized [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_train_begin_initializes_and_reports_zero_progress PASSED [ 55%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_train_begin_initializes_and_reports_zero_progress [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_train_begin_skips_non_world_process_zero PASSED [ 55%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_train_begin_skips_non_world_process_zero [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_train_end_reports_completion PASSED [ 56%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_on_train_end_reports_completion [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_progress_calculation_caps_at_99 PASSED [ 56%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_progress_calculation_caps_at_99 [PASSED] 0.07s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_update_status_returns_false_without_url PASSED [ 57%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_update_status_returns_false_without_url [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_update_status_throttling PASSED [ 58%]tests/trainer/test_trainer_callback.py::KubeflowCallbackTest::test_update_status_throttling [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerControlTest::test_default_values PASSED [ 58%]tests/trainer/test_trainer_callback.py::TrainerControlTest::test_default_values [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerControlTest::test_new_epoch_resets_epoch_stop_flag PASSED [ 59%]tests/trainer/test_trainer_callback.py::TrainerControlTest::test_new_epoch_resets_epoch_stop_flag [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerControlTest::test_new_step_resets_step_flags PASSED [ 59%]tests/trainer/test_trainer_callback.py::TrainerControlTest::test_new_step_resets_step_flags [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerControlTest::test_new_training_resets_stop_flag PASSED [ 60%]tests/trainer/test_trainer_callback.py::TrainerControlTest::test_new_training_resets_stop_flag [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::TrainerControlTest::test_state_export PASSED [ 60%]tests/trainer/test_trainer_callback.py::TrainerControlTest::test_state_export [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_call_event_passes_kwargs PASSED [ 61%]tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_call_event_passes_kwargs [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_callback_list_property PASSED [ 61%]tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_callback_list_property [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_pop_callback_returns_none_if_not_found PASSED [ 62%]tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_pop_callback_returns_none_if_not_found [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_warning_without_default_flow_callback PASSED [ 62%]tests/trainer/test_trainer_callback.py::CallbackHandlerTest::test_warning_without_default_flow_callback [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_patience_counter_increments_when_metric_does_not_improve PASSED [ 63%]tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_patience_counter_increments_when_metric_does_not_improve [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_patience_counter_resets_when_metric_improves PASSED [ 63%]tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_patience_counter_resets_when_metric_improves [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_state_includes_all_attributes PASSED [ 64%]tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_state_includes_all_attributes [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_threshold_prevents_small_improvements PASSED [ 64%]tests/trainer/test_trainer_callback.py::EarlyStoppingCallbackTest::test_threshold_prevents_small_improvements [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::ExportableStateTest::test_from_state_creates_instance PASSED [ 65%]tests/trainer/test_trainer_callback.py::ExportableStateTest::test_from_state_creates_instance [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::ExportableStateTest::test_from_state_sets_attributes PASSED [ 65%]tests/trainer/test_trainer_callback.py::ExportableStateTest::test_from_state_sets_attributes [PASSED] 0.00s
+
+tests/trainer/test_trainer_callback.py::NotebookProgressCallbackTest::test_evaluate_after_training SKIPPED [ 66%]tests/trainer/test_trainer_callback.py::NotebookProgressCallbackTest::test_evaluate_after_training [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_callback.py::NotebookProgressCallbackTest::test_evaluate_before_training SKIPPED [ 66%]tests/trainer/test_trainer_callback.py::NotebookProgressCallbackTest::test_evaluate_before_training [SKIPPED] 0.00s
+
+tests/trainer/test_trainer_callback.py::NotebookProgressCallbackTest::test_multiple_evaluate_calls SKIPPED [ 67%]tests/trainer/test_trainer_callback.py::NotebookProgressCallbackTest::test_multiple_evaluate_calls [SKIPPED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_activation_checkpointing_bare_cli_flags PASSED [ 67%]tests/trainer/test_training_args.py::TestTrainingArguments::test_activation_checkpointing_bare_cli_flags [PASSED] 0.01s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_activation_checkpointing_round_trip_does_not_warn PASSED [ 68%]tests/trainer/test_training_args.py::TestTrainingArguments::test_activation_checkpointing_round_trip_does_not_warn [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_activation_checkpointing_wins_on_a_copy PASSED [ 68%]tests/trainer/test_training_args.py::TestTrainingArguments::test_activation_checkpointing_wins_on_a_copy [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_custom_output_dir PASSED [ 69%]tests/trainer/test_training_args.py::TestTrainingArguments::test_custom_output_dir [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_dataloader_prefetch_requires_workers PASSED [ 69%]tests/trainer/test_training_args.py::TestTrainingArguments::test_dataloader_prefetch_requires_workers [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_debug_option_parsing PASSED [ 70%]tests/trainer/test_training_args.py::TestTrainingArguments::test_debug_option_parsing [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_default_output_dir PASSED [ 70%]tests/trainer/test_training_args.py::TestTrainingArguments::test_default_output_dir [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_dict_field_parsing PASSED [ 71%]tests/trainer/test_training_args.py::TestTrainingArguments::test_dict_field_parsing [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_do_eval_auto_enabled PASSED [ 72%]tests/trainer/test_training_args.py::TestTrainingArguments::test_do_eval_auto_enabled [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_dtype_to_json PASSED [ 72%]tests/trainer/test_training_args.py::TestTrainingArguments::test_dtype_to_json [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_enum_coercions PASSED [ 73%]tests/trainer/test_training_args.py::TestTrainingArguments::test_enum_coercions [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_eval_steps_fallback_to_logging_steps PASSED [ 73%]tests/trainer/test_training_args.py::TestTrainingArguments::test_eval_steps_fallback_to_logging_steps [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_eval_steps_required_when_strategy_steps PASSED [ 74%]tests/trainer/test_training_args.py::TestTrainingArguments::test_eval_steps_required_when_strategy_steps [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_fp16_bf16_mutual_exclusivity PASSED [ 74%]tests/trainer/test_training_args.py::TestTrainingArguments::test_fp16_bf16_mutual_exclusivity [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_gradient_checkpointing_is_a_deprecated_alias PASSED [ 75%]tests/trainer/test_training_args.py::TestTrainingArguments::test_gradient_checkpointing_is_a_deprecated_alias [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_include_num_input_tokens_seen_coercion PASSED [ 75%]tests/trainer/test_training_args.py::TestTrainingArguments::test_include_num_input_tokens_seen_coercion [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_kubeflow_auto_enable PASSED [ 76%]tests/trainer/test_training_args.py::TestTrainingArguments::test_kubeflow_auto_enable [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_load_best_model_requires_matching_strategies PASSED [ 76%]tests/trainer/test_training_args.py::TestTrainingArguments::test_load_best_model_requires_matching_strategies [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_logging_steps_required_nonzero PASSED [ 77%]tests/trainer/test_training_args.py::TestTrainingArguments::test_logging_steps_required_nonzero [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_metric_for_best_model_defaults PASSED [ 77%]tests/trainer/test_training_args.py::TestTrainingArguments::test_metric_for_best_model_defaults [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_output_dir_creation PASSED [ 78%]tests/trainer/test_training_args.py::TestTrainingArguments::test_output_dir_creation [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_output_dir_expands_user PASSED [ 78%]tests/trainer/test_training_args.py::TestTrainingArguments::test_output_dir_expands_user [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_reduce_on_plateau_requires_eval PASSED [ 79%]tests/trainer/test_training_args.py::TestTrainingArguments::test_reduce_on_plateau_requires_eval [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_report_to_none_handling PASSED [ 79%]tests/trainer/test_training_args.py::TestTrainingArguments::test_report_to_none_handling [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_steps_must_be_integer_when_greater_than_one PASSED [ 80%]tests/trainer/test_training_args.py::TestTrainingArguments::test_steps_must_be_integer_when_greater_than_one [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_torch_compile_auto_enable PASSED [ 80%]tests/trainer/test_training_args.py::TestTrainingArguments::test_torch_compile_auto_enable [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_torch_empty_cache_steps_requirements PASSED [ 81%]tests/trainer/test_training_args.py::TestTrainingArguments::test_torch_empty_cache_steps_requirements [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_use_cpu_disables_pin_memory PASSED [ 81%]tests/trainer/test_training_args.py::TestTrainingArguments::test_use_cpu_disables_pin_memory [PASSED] 0.00s
+
+tests/trainer/test_training_args.py::TestTrainingArguments::test_warmup_steps_validation PASSED [ 82%]tests/trainer/test_training_args.py::TestTrainingArguments::test_warmup_steps_validation [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_dataloader_without_dataset PASSED [ 82%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_dataloader_without_dataset [PASSED] 0.26s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_get_eval_dataloader_with_persistent_workers PASSED [ 83%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_get_eval_dataloader_with_persistent_workers [PASSED] 0.01s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_get_eval_dataloader_without_persistent_workers PASSED [ 83%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_get_eval_dataloader_without_persistent_workers [PASSED] 0.01s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_in_order_is_forwarded PASSED [ 84%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_in_order_is_forwarded [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_multiprocessing_context_is_forwarded PASSED [ 84%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_multiprocessing_context_is_forwarded [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_prefetch_factor_applies_to_iterable_dataset PASSED [ 85%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_prefetch_factor_applies_to_iterable_dataset [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_train_and_eval_dataloaders PASSED [ 86%]tests/trainer/test_trainer_data.py::TrainerDataloaderTest::test_train_and_eval_dataloaders [PASSED] 0.01s
+
+tests/trainer/test_trainer_data.py::TrainerLabelSmoothingTest::test_label_smoothing PASSED [ 86%]tests/trainer/test_trainer_data.py::TrainerLabelSmoothingTest::test_label_smoothing [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerLabelSmoothingTest::test_label_smoothing_multi_label_incompatibility PASSED [ 87%]tests/trainer/test_trainer_data.py::TrainerLabelSmoothingTest::test_label_smoothing_multi_label_incompatibility [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_basic PASSED [ 87%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_basic [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_converges_for_large_effective_batch_size PASSED [ 88%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_converges_for_large_effective_batch_size [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_drop_last PASSED [ 88%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_drop_last [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_trainer_effective_batch_size_formula PASSED [ 89%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_batch_rebalance_trainer_effective_batch_size_formula [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_distributed_length_grouped PASSED [ 89%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_distributed_length_grouped [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_distributed_sampler_with_loop PASSED [ 90%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_distributed_sampler_with_loop [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_eval_sampler_deterministic_with_group_by_length PASSED [ 90%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_eval_sampler_deterministic_with_group_by_length [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_group_by_length PASSED [ 91%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_group_by_length [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_group_by_length_with_batch_encoding PASSED [ 91%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_group_by_length_with_batch_encoding [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_group_by_length_with_dict PASSED [ 92%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_group_by_length_with_dict [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_iterable_dataset_shard PASSED [ 92%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_iterable_dataset_shard [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_iterable_dataset_shard_with_length PASSED [ 93%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_iterable_dataset_shard_with_length [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_shard_sampler PASSED [ 93%]tests/trainer/test_trainer_data.py::TrainerSamplerTest::test_shard_sampler [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerBatchSizeFinderTest::test_executable_batch_size PASSED [ 94%]tests/trainer/test_trainer_data.py::TrainerBatchSizeFinderTest::test_executable_batch_size [PASSED] 3.41s
+
+tests/trainer/test_trainer_data.py::TrainerBatchSizeFinderTest::test_executable_batch_size_no_search PASSED [ 94%]tests/trainer/test_trainer_data.py::TrainerBatchSizeFinderTest::test_executable_batch_size_no_search [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerBatchSizeFinderTest::test_executable_batch_size_with_error PASSED [ 95%]tests/trainer/test_trainer_data.py::TrainerBatchSizeFinderTest::test_executable_batch_size_with_error [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_eval_loop_container PASSED [ 95%]tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_eval_loop_container [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_get_parameter_names PASSED [ 96%]tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_get_parameter_names [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_get_parameter_names_rmsnorm PASSED [ 96%]tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_get_parameter_names_rmsnorm [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_pad_and_concatenate_with_1d PASSED [ 97%]tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_pad_and_concatenate_with_1d [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_remove_columns_collator PASSED [ 97%]tests/trainer/test_trainer_data.py::TrainerDataUtilsTest::test_remove_columns_collator [PASSED] 0.00s
+
+tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_dynamic_shapes PASSED [ 98%]tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_dynamic_shapes [PASSED] 0.01s
+
+tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_evaluation_iterable_dataset PASSED [ 98%]tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_evaluation_iterable_dataset [PASSED] 0.01s
+
+tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_predict_iterable_dataset PASSED [ 99%]tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_predict_iterable_dataset [PASSED] 0.01s
+
+tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_training_iterable_dataset PASSED [100%]tests/trainer/test_trainer_data.py::TrainerDynamicShapesAndIterableTest::test_training_iterable_dataset [PASSED] 0.26s
+
+
+=============================== warnings summary ===============================
+../.local/lib/python3.14/site-packages/_pytest/config/__init__.py:1474
+  /home/wll/.local/lib/python3.14/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: env
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+tests/trainer/test_trainer_checkpointing.py: 167 warnings
+tests/trainer/test_trainer_callback.py: 11 warnings
+tests/trainer/test_trainer_data.py: 6 warnings
+  /home/wll/.local/lib/python3.14/site-packages/torch/utils/data/dataloader.py:759: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+    super().__init__(loader)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== CI READ-ONLY CACHE FALLBACK: not triggered ==================
+====== 180 passed, 13 skipped, 185 warnings, 16 subtests passed in 59.69s ======

@@ -28,6 +28,7 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from typing import Any
@@ -77,6 +78,7 @@ from transformers.testing_utils import (
     slow,
     torch_device,
 )
+from transformers.trainer_resume import RESUME_GRADS_NAME, RESUME_STATE_NAME, write_manifest
 from transformers.trainer_utils import (
     PREFIX_CHECKPOINT_DIR,
     get_last_checkpoint,
@@ -95,6 +97,7 @@ from .trainer_test_utils import (
     RegressionPreTrainedModel,
     RegressionRandomPreTrainedModel,
     RegressionTrainingArguments,
+    SequenceClassificationDataset,
     TrainerIntegrationCommon,
     get_dataset,
     get_language_model_trainer,
@@ -1151,6 +1154,493 @@ class TrainerInterruptedTrainingTest(TestCasePlus, TrainerIntegrationCommon):
             f"Baseline: {baseline_data_order}\n"
             f"Resumed: {resumed_data_order}",
         )
+
+
+# ---------------------------------------------------------------------------
+# Positional (non-replaying) resume tests
+# ---------------------------------------------------------------------------
+
+
+class _RecordingDataset(torch.utils.data.Dataset):
+    """Map-style dataset whose sample payload identifies the row it came from."""
+
+    def __init__(self, length=48, seed=0):
+        generator = torch.Generator().manual_seed(seed)
+        self.values = torch.randn(length, generator=generator)
+        self.length = length
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, index):
+        return {"input_x": self.values[index], "row_id": index, "labels": 2 * self.values[index] + 3}
+
+
+class _RecordingModel(nn.Module):
+    """Regression model that logs the row ids it was shown, in order."""
+
+    def __init__(self, width=0):
+        super().__init__()
+        self.a = nn.Parameter(torch.tensor(0.5))
+        self.b = nn.Parameter(torch.tensor(0.2))
+        self.width = width
+        self.seen: list[int] = []
+
+    def forward(self, input_x, labels=None, row_id=None, **kwargs):
+        y = self.a * input_x + self.b
+        if row_id is not None:
+            self.seen.extend(row_id.tolist())
+        if labels is None:
+            return {"logits": y}
+        return {"loss": nn.functional.mse_loss(y, labels), "logits": y}
+
+
+class _AugmentingDataset(torch.utils.data.Dataset):
+    """Map-style dataset that draws its augmentation noise from the global torch RNG."""
+
+    def __init__(self, length=48, seed=0):
+        generator = torch.Generator().manual_seed(seed)
+        self.values = torch.randn(length, generator=generator)
+        self.length = length
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, index):
+        noise = torch.rand(()) * 0.1
+        return {"input_x": self.values[index] + noise, "row_id": index, "labels": self.values[index]}
+
+
+class _MidWindowSave(TrainerCallback):
+    """Ask for a checkpoint right after a given micro-batch of the running update step."""
+
+    def __init__(self):
+        self.trainer = None
+        self.target_step = 1
+        self.target_substep = 1
+        self.armed = False
+        self.saved_path = None
+
+    def on_step_begin(self, args, state, control, **kwargs):
+        if state.global_step == self.target_step:
+            self.armed = True
+
+    def on_substep_end(self, args, state, control, **kwargs):
+        if not self.armed:
+            return
+        self.armed = False
+        self.target_substep -= 1
+        if self.target_substep == 0:
+            self.trainer._save_checkpoint(self.trainer.model, None)
+            self.saved_path = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.target_step}")
+
+    def on_step_end(self, args, state, control, **kwargs):
+        self.armed = False
+
+
+@require_torch
+class TrainerPositionalResumeTest(TestCasePlus, TrainerIntegrationCommon):
+    """`resumable_dataloader=True`: resume by position, never by replaying the data."""
+
+    def get_args(self, output_dir, **kwargs):
+        settings = {
+            "output_dir": output_dir,
+            "max_steps": 8,
+            "per_device_train_batch_size": 4,
+            "save_strategy": "steps",
+            "save_steps": 1,
+            "logging_steps": 1,
+            "learning_rate": 0.1,
+            "report_to": [],
+            "disable_tqdm": True,
+            "resumable_dataloader": True,
+        }
+        settings.update(kwargs)
+        return TrainingArguments(**settings)
+
+    def get_trainer(self, output_dir, dataset=None, model=None, **kwargs):
+        trainer = Trainer(
+            model if model is not None else _RecordingModel(),
+            self.get_args(output_dir, **kwargs),
+            train_dataset=dataset if dataset is not None else _RecordingDataset(),
+        )
+        trainer.model_accepts_loss_kwargs = False
+        return trainer
+
+    def train_and_collect(self, trainer, resume=None):
+        trainer.train(resume_from_checkpoint=resume)
+        losses = [entry["loss"] for entry in trainer.state.log_history if "loss" in entry]
+        return trainer.model.seen, losses
+
+    def test_resume_matches_uninterrupted_run_at_every_step(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        full = self.get_trainer(output_dir)
+        full_seen, full_losses = self.train_and_collect(full)
+        full_params = torch.cat([p.detach().flatten() for p in full.model.parameters()])
+
+        for step in range(1, full.state.global_step):
+            with self.subTest(resume_step=step):
+                resumed = self.get_trainer(self.get_auto_remove_tmp_dir())
+                seen, losses = self.train_and_collect(
+                    resumed, os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-{step}")
+                )
+                params = torch.cat([p.detach().flatten() for p in resumed.model.parameters()])
+                self.assertTrue(torch.equal(params, full_params), f"weights differ after resuming at step {step}")
+                self.assertEqual(losses, full_losses, f"loss curve differs after resuming at step {step}")
+                # The resumed call draws exactly the rows the uninterrupted run drew after the
+                # checkpoint, in the same order: a suffix of the epoch, with nothing repeated.
+                self.assertEqual(seen, full_seen[-len(seen) :], f"sample order differs after resuming at step {step}")
+                self.assertEqual(len(set(seen)), len(seen), f"rows repeated after resuming at step {step}")
+
+    @unittest.skipUnless(
+        __import__("transformers.trainer_pt_utils", fromlist=["AcceleratorConfig"])
+        .AcceleratorConfig()
+        .use_seedable_sampler,
+        "the default seeded sampler is what makes the order identical",
+    )
+    def test_sample_order_is_unchanged_by_enabling_the_option(self):
+        # With accelerate's default seedable sampler the legacy order is already a function of
+        # (seed, epoch), so enabling the option must not shuffle a different permutation: only the
+        # position handling is new.
+        for seed in (0, 7):
+            with self.subTest(seed=seed):
+                without = self.get_trainer(self.get_auto_remove_tmp_dir(), seed=seed, resumable_dataloader=False)
+                without.train()
+                with_option = self.get_trainer(self.get_auto_remove_tmp_dir(), seed=seed, resumable_dataloader=True)
+                with_option.train()
+                self.assertEqual(list(with_option.model.seen), list(without.model.seen))
+
+    def test_sample_order_is_exact_and_duplicate_free(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        full = self.get_trainer(output_dir, max_steps=4, num_train_epochs=1)
+        full_seen, _ = self.train_and_collect(full)
+
+        resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), max_steps=4, num_train_epochs=1)
+        seen_after_resume, _ = self.train_and_collect(resumed, os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-2"))
+        checkpoint_seen = full_seen[: len(full_seen) - len(seen_after_resume)]
+        self.assertEqual(seen_after_resume, full_seen[-len(seen_after_resume) :])
+        self.assertEqual(len(set(full_seen)), len(full_seen), "an epoch must not repeat a row")
+        self.assertFalse(set(checkpoint_seen) & set(seen_after_resume), "rows were drawn on both sides of the resume")
+
+    def test_augmentation_randomness_is_reproduced(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        dataset = _AugmentingDataset()
+
+        full = self.get_trainer(output_dir, dataset=_AugmentingDataset())
+        full.train()
+        full_params = torch.cat([p.detach().flatten() for p in full.model.parameters()])
+
+        resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), dataset=_AugmentingDataset())
+        resumed.train(resume_from_checkpoint=os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-4"))
+        resumed_params = torch.cat([p.detach().flatten() for p in resumed.model.parameters()])
+        # `SeededDataset` makes each row's augmentation a function of (seed, epoch, index), so the
+        # resumed run sees exactly the same noise as the uninterrupted one.
+        self.assertTrue(torch.equal(resumed_params, full_params))
+        self.assertEqual(dataset.length, 48)
+
+    def test_resume_inside_gradient_accumulation_window(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        full = self.get_trainer(output_dir, gradient_accumulation_steps=3, max_steps=4, save_strategy="no")
+        full_seen, full_losses = self.train_and_collect(full)
+        full_params = torch.cat([p.detach().flatten() for p in full.model.parameters()])
+
+        mid = _MidWindowSave()
+        output_dir = self.get_auto_remove_tmp_dir()
+        interrupted = self.get_trainer(output_dir, gradient_accumulation_steps=3, max_steps=4, save_strategy="no")
+        mid.trainer = interrupted
+        interrupted.add_callback(mid)
+        interrupted.train()
+        self.assertIsNotNone(mid.saved_path, "the mid-window checkpoint was not written")
+
+        state = torch.load(os.path.join(mid.saved_path, RESUME_STATE_NAME), weights_only=True)
+        self.assertGreater(state["micro_step"], 0)
+        self.assertTrue(os.path.isfile(os.path.join(mid.saved_path, RESUME_GRADS_NAME)))
+
+        resumed = self.get_trainer(
+            self.get_auto_remove_tmp_dir(), gradient_accumulation_steps=3, max_steps=4, save_strategy="no"
+        )
+        seen, losses = self.train_and_collect(resumed, mid.saved_path)
+        params = torch.cat([p.detach().flatten() for p in resumed.model.parameters()])
+        self.assertTrue(torch.equal(params, full_params))
+        self.assertEqual(losses, full_losses)
+        self.assertEqual(seen, full_seen[-len(seen) :])
+        self.assertEqual(len(set(seen)), len(seen))
+
+    def test_resume_cost_does_not_grow_with_progress(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = self.get_trainer(output_dir, max_steps=12, save_steps=1)
+        trainer.train()
+
+        def time_resume(step):
+            resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), max_steps=12, save_steps=1)
+            checkpoint = os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-{step}")
+            start = time.perf_counter()
+            resumed.model.seen.clear()
+            resumed.train(resume_from_checkpoint=checkpoint)
+            # Only the rows still to be trained are drawn: nothing is replayed to reach the cursor.
+            return time.perf_counter() - start, len(resumed.model.seen)
+
+        early, early_rows = time_resume(2)
+        late, late_rows = time_resume(9)
+        print(f"rows drawn on resume: step 2 = {early_rows}, step 9 = {late_rows}")
+        print(f"resume wall time: step 2 = {early:.3f}s, step 9 = {late:.3f}s")
+        self.assertEqual(early_rows - late_rows, (9 - 2) * 4)
+        self.assertLess(late, max(early * 4, early + 0.5))
+
+    def test_missing_component_is_refused_with_reason(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = self.get_trainer(output_dir, save_steps=2)
+        trainer.train()
+        checkpoint = os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-2")
+
+        cases = {
+            "optimizer.pt": "missing file: optimizer.pt",
+            RESUME_STATE_NAME: "missing file: resume_state.pt",
+            "checkpoint_manifest.json": "written completely",
+        }
+        for filename, expected in cases.items():
+            with self.subTest(missing=filename):
+                broken = os.path.join(self.get_auto_remove_tmp_dir(), "checkpoint-2")
+                shutil.copytree(checkpoint, broken)
+                os.remove(os.path.join(broken, filename))
+                resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), save_steps=2)
+                with self.assertRaises(ValueError) as context:
+                    resumed.train(resume_from_checkpoint=broken)
+                self.assertIn(expected, str(context.exception))
+
+    def test_datetime_dataset_mismatch_is_reported(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = self.get_trainer(output_dir, save_steps=2)
+        trainer.train()
+        checkpoint = os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-2")
+        state = torch.load(os.path.join(checkpoint, RESUME_STATE_NAME), weights_only=True)
+        state["dataset_signature"] = {**state["dataset_signature"], "length": 999}
+        torch.save(state, os.path.join(checkpoint, RESUME_STATE_NAME))
+        # The manifest recorded the checksum, so the edit is caught even before the comparison.
+        resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), save_steps=2)
+        with self.assertRaises(ValueError) as context:
+            resumed.train(resume_from_checkpoint=checkpoint)
+        self.assertIn("corrupted", str(context.exception))
+
+    def test_cursor_beyond_epoch_is_refused(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = self.get_trainer(output_dir, save_steps=2)
+        trainer.train()
+        checkpoint = os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-2")
+        state = torch.load(os.path.join(checkpoint, RESUME_STATE_NAME), weights_only=True)
+        state["batches_consumed"] = 10**6
+        torch.save(state, os.path.join(checkpoint, RESUME_STATE_NAME))
+
+        write_manifest(checkpoint, 2)
+        resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), save_steps=2)
+        with self.assertRaises(ValueError) as context:
+            resumed.train(resume_from_checkpoint=checkpoint)
+        self.assertIn("cursor", str(context.exception))
+
+    def test_non_positional_sampling_strategy_is_refused(self):
+        # Length-grouped orders are a function of the whole dataset, not a position, so the option
+        # must refuse them rather than checkpoint a cursor that cannot reproduce the order.
+        for strategy in ("group_by_length", "batch_rebalance"):
+            with self.subTest(strategy=strategy):
+                trainer = self.get_trainer(
+                    self.get_auto_remove_tmp_dir(), dataset=SequenceClassificationDataset(), save_steps=2
+                )
+                trainer.args.train_sampling_strategy = strategy
+                with self.assertRaises(ValueError) as context:
+                    trainer.get_train_dataloader()
+                self.assertIn("train_sampling_strategy", str(context.exception))
+
+    def test_overridden_dataloader_is_refused(self):
+        class CustomLoaderTrainer(Trainer):
+            def get_train_dataloader(self):
+                # A subclass may build its loader from scratch; then there is no cursor to save.
+                return torch.utils.data.DataLoader(self.train_dataset, batch_size=4, collate_fn=self.data_collator)
+
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = CustomLoaderTrainer(
+            _RecordingModel(), self.get_args(output_dir, save_steps=2), train_dataset=_RecordingDataset()
+        )
+        trainer.model_accepts_loss_kwargs = False
+        with self.assertRaises(RuntimeError) as context:
+            trainer.train()
+        self.assertIn("no data cursor to save", str(context.exception))
+
+    def test_incompatible_flags_are_refused(self):
+        with self.assertRaises(ValueError) as context:
+            TrainingArguments(
+                output_dir=self.get_auto_remove_tmp_dir(), resumable_dataloader=True, ignore_data_skip=True
+            )
+        self.assertIn("opposite things", str(context.exception))
+        with self.assertRaises(ValueError) as context:
+            TrainingArguments(
+                output_dir=self.get_auto_remove_tmp_dir(), resumable_dataloader=True, save_only_model=True
+            )
+        self.assertIn("save_only_model", str(context.exception))
+
+    def test_checkpoint_write_is_atomic(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = self.get_trainer(output_dir, save_steps=2)
+        with patch.object(trainer, "save_model", side_effect=RuntimeError("disk full")):
+            with self.assertRaises(RuntimeError):
+                trainer.train()
+        self.assertEqual(
+            [entry for entry in os.listdir(output_dir) if entry.startswith(PREFIX_CHECKPOINT_DIR)],
+            [],
+            "an interrupted save must not leave a partial checkpoint directory behind",
+        )
+
+    def test_option_off_keeps_the_existing_behaviour(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        trainer = self.get_trainer(output_dir, save_steps=2, resumable_dataloader=False)
+        trainer.train()
+        checkpoint = os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-2")
+        self.assertFalse(os.path.exists(os.path.join(checkpoint, RESUME_STATE_NAME)))
+        self.assertFalse(os.path.exists(os.path.join(checkpoint, "checkpoint_manifest.json")))
+        self.assertFalse(os.path.exists(os.path.join(checkpoint, "resume_state.pt")))
+        # The legacy replay path still resumes to the same weights.
+        full_params = torch.cat([p.detach().flatten() for p in trainer.model.parameters()])
+        resumed = self.get_trainer(self.get_auto_remove_tmp_dir(), save_steps=2, resumable_dataloader=False)
+        resumed.train(resume_from_checkpoint=checkpoint)
+        self.assertTrue(
+            torch.equal(torch.cat([p.detach().flatten() for p in resumed.model.parameters()]), full_params)
+        )
+
+
+@require_torch
+class TrainerPositionalResumeStreamingTest(TestCasePlus):
+    """Streaming (no `__len__`) datasets resume from the source's own state."""
+
+    def get_stream_dataset(self):
+        from datasets import Dataset
+
+        return Dataset.from_dict(
+            {"input_x": [float(i) for i in range(48)], "labels": [float(i) for i in range(48)]}
+        ).to_iterable_dataset(num_shards=1)
+
+    def get_trainer(self, output_dir, resume=None):
+        args = TrainingArguments(
+            output_dir=output_dir,
+            max_steps=6,
+            per_device_train_batch_size=4,
+            save_steps=2,
+            logging_steps=1,
+            learning_rate=0.1,
+            optim="sgd",
+            report_to=[],
+            disable_tqdm=True,
+            resumable_dataloader=True,
+        )
+        trainer = Trainer(model=_RecordingModel(), args=args, train_dataset=self.get_stream_dataset())
+        trainer.model_accepts_loss_kwargs = False
+        self._train(trainer, resume)
+        return trainer
+
+    @staticmethod
+    def _train(trainer, resume=None):
+        trainer.train(resume_from_checkpoint=resume)
+
+    def test_streaming_resume_matches(self):
+        output_dir = self.get_auto_remove_tmp_dir()
+        full = self.get_trainer(output_dir)
+        full_params = torch.cat([p.detach().flatten() for p in full.model.parameters()])
+        full_losses = [entry["loss"] for entry in full.state.log_history if "loss" in entry]
+
+        for step in (2, 4):
+            with self.subTest(resume_step=step):
+                resumed = self.get_trainer(
+                    self.get_auto_remove_tmp_dir(), os.path.join(output_dir, f"{PREFIX_CHECKPOINT_DIR}-{step}")
+                )
+                self.assertTrue(
+                    torch.equal(torch.cat([p.detach().flatten() for p in resumed.model.parameters()]), full_params)
+                )
+                self.assertEqual(
+                    [entry["loss"] for entry in resumed.state.log_history if "loss" in entry], full_losses
+                )
+
+    def test_streaming_resume_inside_gradient_accumulation_window(self):
+        class SaveMidWindow(TrainerCallback):
+            def __init__(self):
+                self.trainer = None
+                self.saved_path = None
+                self.armed = False
+
+            def on_step_begin(self, args, state, control, **kwargs):
+                if state.global_step == 1:
+                    self.armed = True
+
+            def on_substep_end(self, args, state, control, **kwargs):
+                if not self.armed:
+                    return
+                self.armed = False
+                self.trainer._save_checkpoint(self.trainer.model, None)
+                self.saved_path = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-1")
+
+            def on_step_end(self, args, state, control, **kwargs):
+                self.armed = False
+
+        def args_for(output_dir):
+            return TrainingArguments(
+                output_dir=output_dir,
+                max_steps=4,
+                per_device_train_batch_size=4,
+                gradient_accumulation_steps=3,
+                save_strategy="no",
+                logging_steps=1,
+                learning_rate=0.1,
+                optim="sgd",
+                report_to=[],
+                disable_tqdm=True,
+                resumable_dataloader=True,
+            )
+
+        full = Trainer(
+            _RecordingModel(), args_for(self.get_auto_remove_tmp_dir()), train_dataset=self.get_stream_dataset()
+        )
+        full.model_accepts_loss_kwargs = False
+        self._train(full)
+        full_params = torch.cat([p.detach().flatten() for p in full.model.parameters()])
+        full_losses = [entry["loss"] for entry in full.state.log_history if "loss" in entry]
+
+        mid = SaveMidWindow()
+        interrupted = Trainer(
+            _RecordingModel(), args_for(self.get_auto_remove_tmp_dir()), train_dataset=self.get_stream_dataset()
+        )
+        interrupted.model_accepts_loss_kwargs = False
+        mid.trainer = interrupted
+        interrupted.add_callback(mid)
+        self._train(interrupted)
+        self.assertIsNotNone(mid.saved_path)
+        state = torch.load(os.path.join(mid.saved_path, RESUME_STATE_NAME), weights_only=True)
+        self.assertGreater(state["micro_step"], 0)
+        self.assertTrue(os.path.isfile(os.path.join(mid.saved_path, RESUME_GRADS_NAME)))
+
+        resumed = Trainer(
+            _RecordingModel(), args_for(self.get_auto_remove_tmp_dir()), train_dataset=self.get_stream_dataset()
+        )
+        resumed.model_accepts_loss_kwargs = False
+        self._train(resumed, mid.saved_path)
+        self.assertTrue(
+            torch.equal(torch.cat([p.detach().flatten() for p in resumed.model.parameters()]), full_params)
+        )
+        self.assertEqual([entry["loss"] for entry in resumed.state.log_history if "loss" in entry], full_losses)
+
+    def test_streaming_without_state_dict_is_refused(self):
+        class OpaqueStream(torch.utils.data.IterableDataset):
+            def __iter__(self):
+                for i in range(8):
+                    yield {"input_x": float(i), "labels": float(i)}
+
+        args = TrainingArguments(
+            output_dir=self.get_auto_remove_tmp_dir(),
+            max_steps=2,
+            report_to=[],
+            disable_tqdm=True,
+            resumable_dataloader=True,
+        )
+        trainer = Trainer(model=_RecordingModel(), args=args, train_dataset=OpaqueStream())
+        with self.assertRaises(ValueError) as context:
+            trainer.train()
+        self.assertIn("state_dict", str(context.exception))
 
 
 # ---------------------------------------------------------------------------

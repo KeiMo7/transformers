@@ -299,6 +299,56 @@ When resuming, [`Trainer`] restores the optimizer state, scheduler state, and RN
 
 Checkpoint resuming requires optimizer and scheduler state files in the checkpoint directory. If those files are missing (for example, when `save_only_model=True`), the optimizer restarts from scratch.
 
+#### Exact resume without replaying the data
+
+By default, resuming fast-forwards the dataloader by iterating over the already-seen data until it
+reaches the saved position. That costs one extra partial pass (forty minutes of a twelve hour run,
+for example) and, in distributed or multi-worker setups, does not always reproduce the exact batch
+order, so the loss curve can jump at the seam.
+
+Set `resumable_dataloader=True` to record the position of the data stream in the checkpoint instead:
+
+```py
+args = TrainingArguments(..., resumable_dataloader=True)
+trainer = Trainer(model=model, args=args, train_dataset=dataset)
+trainer.train()
+
+# Later, possibly after a crash: nothing is replayed, the cost does not depend on progress.
+trainer.train(resume_from_checkpoint="out/checkpoint-1000")
+```
+
+With this option the sampler becomes a pure function of `(seed, epoch)`, so the batch order can be
+rebuilt instead of replayed. With accelerate's default seedable sampler this rebuilds the very same
+order the run already had, so turning the option on does not change what the model sees. Augmentation
+randomness is seeded per sample. A checkpoint stores:
+
+- the data cursor (epoch, micro-batch within the epoch, and how far into the
+  gradient-accumulation window it sits),
+- the partially accumulated gradients when the checkpoint lands mid-window,
+- a dataset signature, so a resume against a different dataset is refused with the difference,
+  rather than silently reading the wrong rows.
+
+Streaming datasets are supported when they implement `state_dict`/`load_state_dict` (for example
+`datasets.IterableDataset`); the source state that reproduces the next batch is stored, so no random
+access to the data is required. Streaming with more than one data-parallel process is refused,
+because a single source position cannot describe what each process has consumed.
+
+The option refuses configurations whose order cannot be described by a position, such as
+`train_sampling_strategy="group_by_length"`, a custom sampler, or sharded streaming across data
+parallel ranks, instead of resuming incorrectly. Checkpoints are written into a staging directory and
+renamed into place, and a completion manifest is written last, so an interrupted write is never
+mistaken for a resumable checkpoint.
+
+<Note>
+
+Use the option from the start of a run and on every resume of that run: a checkpoint without the
+cursor cannot be resumed with it enabled, and a checkpoint with it can only be resumed exactly if the
+resumed run also enables it. It cannot be combined with `ignore_data_skip` (which asks for the
+inexact behaviour this option removes) or with `save_only_model` (which does not checkpoint the state
+resuming needs).
+
+</Note>
+
 ### JIT checkpointing
 
 With periodic checkpointing (save_strategy="steps" or "epoch"), you lose any training progress between the last saved checkpoint and an interruption. On shared clusters with preemptible workloads such as [Kueue](https://kueue.sigs.k8s.io/), jobs can be terminated at any time, so that gap can mean hours of wasted compute.
