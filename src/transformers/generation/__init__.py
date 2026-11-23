@@ -101,6 +101,17 @@ else:
         "GenerateDecoderOnlyOutput",
         "GenerateEncoderDecoderOutput",
     ]
+    _import_structure["batch_invariance"] = [
+        "BatchInvarianceChecker",
+        "BatchInvarianceReport",
+        "RowDifference",
+        "RowStopInfo",
+        "batch_fingerprint",
+        "coverage_reasons",
+        "detect_padding_side",
+        "flip_padding",
+        "validate_batch_invariance",
+    ]
     _import_structure["watermarking"] = [
         "WatermarkDetector",
         "WatermarkDetectorOutput",
@@ -135,6 +146,17 @@ if TYPE_CHECKING:
     except OptionalDependencyNotAvailable:
         pass
     else:
+        from .batch_invariance import (
+            BatchInvarianceChecker,
+            BatchInvarianceReport,
+            RowDifference,
+            RowStopInfo,
+            batch_fingerprint,
+            coverage_reasons,
+            detect_padding_side,
+            flip_padding,
+            validate_batch_invariance,
+        )
         from .candidate_generator import (
             AssistedCandidateGenerator,
             CandidateGenerator,

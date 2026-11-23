@@ -365,6 +365,24 @@ class GenerationConfig(PushToHubMixin):
             Whether to disable the automatic compilation of the forward pass. Automatic compilation happens when
             specific criteria are met, including using a compilable cache. Please open an issue if you find the
             need to use this flag.
+
+        > Parameters that control batch-composition invariance checking
+
+        validate_batch_invariance (`bool`):
+            Whether `generate` should check that each row is independent of its batch composition. When enabled, the
+            same batch is generated once more (same model, same config) and compared row by row; differences are
+            localized to a layer (mask, position, eos, cache) and reported without prompt content. The returned
+            structure does not change: the report is logged and stored on `model._last_batch_invariance_report`.
+            Defaults to `False`, which leaves generation untouched. If the check itself fails, generation proceeds
+            and the failure is recorded in the report.
+        batch_invariant_sampling (`bool`):
+            Whether sampling should draw each row's random numbers from a per-row counter RNG instead of the global
+            batch-wide stream. This makes a row's output reproducible across batch sizes and compositions under a
+            fixed seed. Defaults to `False`, which preserves the existing `torch.multinomial` behavior.
+        batch_invariance_tolerance (`float`):
+            The top-2 logit margin under which a token flip between two compositions is reported as a near-tie
+            (numerical noise) rather than a failure. Defaults to `1e-4`. Only used when
+            `validate_batch_invariance=True`.
     """
 
     extra_output_flags = ("output_attentions", "output_hidden_states", "output_scores", "output_logits")
@@ -470,6 +488,11 @@ class GenerationConfig(PushToHubMixin):
         # Performance
         self.compile_config = kwargs.pop("compile_config", None)
         self.disable_compile = kwargs.pop("disable_compile", None)
+
+        # Batch-composition invariance checking
+        self.validate_batch_invariance = kwargs.pop("validate_batch_invariance", None)
+        self.batch_invariant_sampling = kwargs.pop("batch_invariant_sampling", None)
+        self.batch_invariance_tolerance = kwargs.pop("batch_invariance_tolerance", None)
 
         # Deprecated in 5.13
         self.continuous_batching_config = kwargs.pop("continuous_batching_config", None)
@@ -699,6 +722,13 @@ class GenerationConfig(PushToHubMixin):
             raise ValueError(
                 f"You provided `compile_config` as an instance of {type(self.compile_config)}, but it must be an "
                 "instance of `CompileConfig`."
+            )
+        if self.batch_invariance_tolerance is not None and not (
+            0.0 <= float(self.batch_invariance_tolerance) < float("inf")
+        ):
+            raise ValueError(
+                "`batch_invariance_tolerance` must be a finite, non-negative float, but is "
+                f"{self.batch_invariance_tolerance}."
             )
         # 1.4. Watermarking attributes
         if self.watermarking_config is not None:

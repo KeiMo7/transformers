@@ -1093,6 +1093,8 @@ class PreTrainedModel(
     _auto_class = None
     base_model_prefix: str = ""
     _is_stateful: bool = False
+    # Set by `generate` when `generation_config.validate_batch_invariance` is on (see generation/batch_invariance.py)
+    _last_batch_invariance_report: Any | None = None
     model_tags: list[str] | None = None
 
     # Input-related properties

@@ -58,6 +58,7 @@ from ..utils import (
 )
 from ..utils.deprecation import deprecate_kwarg
 from ..utils.generic import is_flash_attention_requested
+from .batch_invariance import counter_multinomial, per_row_keys
 from .candidate_generator import (
     AssistantVocabTranslatorCache,
     AssistedCandidateGenerator,
@@ -139,6 +140,12 @@ DEPRECATED_CACHE_NAMES = [
     "past_buckets_states",  # reformer
 ]
 ALL_CACHE_NAMES = ["cache"] + DEPRECATED_CACHE_NAMES
+
+# `GenerationConfig` keys that control the batch-invariance check itself. They must never be forwarded to the
+# checker's own comparison run: `GenerationConfig.update(**kwargs)` would re-enable the check and recurse.
+_BATCH_INVARIANCE_CONFIG_KEYS = frozenset(
+    {"validate_batch_invariance", "batch_invariant_sampling", "batch_invariance_tolerance"}
+)
 
 GENERATION_MODES_MAPPING = {
     GenerationMode.SAMPLE: "_sample",
@@ -2521,6 +2528,22 @@ class GenerationMixin(ContinuousMixin):
             if switch:
                 self.set_experts_implementation(original_experts_implementation)
 
+    def _batch_invariant_sampling_keys(
+        self,
+        generation_config: GenerationConfig,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.Tensor | None,
+    ) -> torch.Tensor | None:
+        """Per-row RNG keys when `batch_invariant_sampling` is on, else `None` (historical behavior).
+
+        The keys are derived from each row's *unmasked* prompt tokens plus the current global seed (as set by
+        `transformers.set_seed` or `torch.manual_seed`), so a row keeps its random stream no matter which batch --
+        or position in a batch -- it lands in.
+        """
+        if not bool(getattr(generation_config, "batch_invariant_sampling", False)):
+            return None
+        return per_row_keys(input_ids, attention_mask, seed=int(torch.initial_seed()))
+
     def _get_deprecated_gen_repo(
         self,
         generation_mode: GenerationMode,
@@ -2827,7 +2850,10 @@ class GenerationMixin(ContinuousMixin):
                 **kwargs,
             )
 
-        # 2. Set generation parameters if not already defined
+        # 2. Set generation parameters if not already defined. `generate` replaces `None` with empty lists below,
+        # which is indistinguishable from a user-supplied empty sampler; the invariance check needs the distinction.
+        user_supplied_logits_processor = logits_processor is not None
+        user_supplied_stopping_criteria = stopping_criteria is not None
         logits_processor = logits_processor if logits_processor is not None else LogitsProcessorList()
         stopping_criteria = stopping_criteria if stopping_criteria is not None else StoppingCriteriaList()
 
@@ -2888,6 +2914,10 @@ class GenerationMixin(ContinuousMixin):
         accepts_position_ids = "position_ids" in set(inspect.signature(self.forward).parameters.keys())
         if not kwargs_has_position_ids and accepts_position_ids and not self.config.is_encoder_decoder:
             model_kwargs["position_ids"] = self._prepare_position_ids_for_generation(inputs_tensor, model_kwargs)
+
+        # Snapshot the attention mask before it is dropped (below) when it is all-ones, so the opt-in invariance
+        # check can still see the padding layout the caller actually used.
+        batch_invariance_attention_mask = model_kwargs.get("attention_mask")
 
         # We can drop the mask altogether if it's all 1s, i.e. no padding, to make downstream attention mask creation and inference
         # faster (we will never have padding). Note that we cannot drop it earlier, as position_ids creation absolutely needs to check
@@ -3015,7 +3045,144 @@ class GenerationMixin(ContinuousMixin):
             **model_kwargs,
         )
 
+        if bool(getattr(generation_config, "validate_batch_invariance", False)):
+            # Opt-in, and never allowed to change what `generate` returns. Adds one extra batched forward over
+            # the same batch (it never splits the batch into single rows).
+            self._maybe_validate_batch_invariance(
+                inputs=inputs,
+                inputs_tensor=inputs_tensor,
+                attention_mask=batch_invariance_attention_mask,
+                result=result,
+                generation_config=generation_config,
+                generation_mode=generation_mode,
+                generation_mode_kwargs=generation_mode_kwargs,
+                generate_kwargs=kwargs,
+                logits_processor=logits_processor if user_supplied_logits_processor else None,
+                stopping_criteria=stopping_criteria if user_supplied_stopping_criteria else None,
+            )
+
         return result
+
+    def _maybe_validate_batch_invariance(
+        self: "GenerativePreTrainedModel",
+        inputs: torch.Tensor | None,
+        inputs_tensor: torch.Tensor,
+        attention_mask: torch.Tensor | None,
+        result,
+        generation_config: GenerationConfig,
+        generation_mode: GenerationMode,
+        generation_mode_kwargs: dict[str, Any],
+        generate_kwargs: dict[str, Any],
+        logits_processor=None,
+        stopping_criteria=None,
+    ) -> None:
+        """Run the opt-in batch-invariance check and store the report; never raises into `generate`."""
+        from .batch_invariance import (
+            STATUS_ERROR,
+            STATUS_FAIL,
+            STATUS_UNCOVERED,
+            split_output,
+        )
+
+        try:
+            if inputs is None or inputs_tensor.ndim != 2 or inputs_tensor.shape[0] < 2:
+                return
+            if getattr(self, "_batch_invariance_check_active", False):
+                # Re-entrancy guard: the comparison run itself must never re-check.
+                return
+            self._batch_invariance_check_active = True
+            report = None
+            if generation_mode_kwargs.get("streamer") is not None:
+                checker = self._make_batch_invariance_checker(
+                    inputs_tensor, attention_mask, result, generation_config, generation_mode
+                )
+                if checker is None:
+                    return
+                report = checker._base_report(["none"])
+                report.status = STATUS_UNCOVERED
+                report.uncovered_reasons.append(
+                    "a `streamer` was passed; re-running to compare would stream tokens twice"
+                )
+            else:
+                checker = self._make_batch_invariance_checker(
+                    inputs_tensor, attention_mask, result, generation_config, generation_mode
+                )
+                if checker is None:
+                    return
+                reasons = checker.coverage(
+                    logits_processor=logits_processor,
+                    stopping_criteria=stopping_criteria,
+                )
+                if reasons:
+                    report = checker._base_report(["none"])
+                    report.status = STATUS_UNCOVERED
+                    report.uncovered_reasons.extend(reasons)
+                else:
+                    comparison_config = copy.deepcopy(generation_config)
+                    comparison_config.validate_batch_invariance = False
+
+                    rerun_extra_kwargs = {
+                        key: value
+                        for key, value in generate_kwargs.items()
+                        # The comparison run must inherit the *effective* config, not re-apply per-call overrides
+                        # (they were already applied to `generation_config` by `_prepare_generation_config`).
+                        # `GenerationConfig.update(**kwargs)` would otherwise re-enable the check and recurse.
+                        if key not in {"attention_mask", "output_scores", "return_dict_in_generate"}
+                        and key not in _BATCH_INVARIANCE_CONFIG_KEYS
+                        and not key.startswith("_")
+                    }
+
+                    def _rerun(ids: torch.Tensor, mask: torch.Tensor | None):
+                        out = self.generate(
+                            ids,
+                            attention_mask=mask,
+                            generation_config=copy.deepcopy(comparison_config),
+                            output_scores=False,
+                            return_dict_in_generate=True,
+                            **rerun_extra_kwargs,
+                        )
+                        return split_output(out)
+
+                    report = checker.run(_rerun, composition="permute")
+            self._last_batch_invariance_report = report
+            log = logger.warning if report.status in (STATUS_FAIL, STATUS_ERROR) else logger.info
+            log("%s", report.summary())
+        except Exception as exc:  # noqa: BLE001 - the check must never affect normal generation
+            from .batch_invariance import STATUS_ERROR, BatchInvarianceReport
+
+            self._last_batch_invariance_report = BatchInvarianceReport(
+                status=STATUS_ERROR, error=f"{type(exc).__name__}: {exc}"
+            )
+            logger.warning("batch-invariance check failed to run; generation output is unaffected (%s)", exc)
+        finally:
+            self._batch_invariance_check_active = False
+
+    def _make_batch_invariance_checker(
+        self: "GenerativePreTrainedModel",
+        inputs_tensor: torch.Tensor,
+        attention_mask: torch.Tensor | None,
+        result,
+        generation_config: GenerationConfig,
+        generation_mode: GenerationMode,
+    ):
+        from .batch_invariance import BatchInvarianceChecker, split_output
+
+        sequences, scores = split_output(result)
+        if not isinstance(sequences, torch.Tensor) or sequences.ndim != 2:
+            return None
+        # `generation_config._mask_length` holds the prompt width when an all-ones mask was dropped.
+        prompt_width = getattr(generation_config, "_mask_length", None) or inputs_tensor.shape[1]
+        return BatchInvarianceChecker(
+            generation_config,
+            inputs_tensor,
+            sequences,
+            attention_mask=attention_mask,
+            reference_scores=scores,
+            tolerance=float(getattr(generation_config, "batch_invariance_tolerance", None) or 1e-4),
+            generation_mode=generation_mode,
+            prompt_width=prompt_width,
+            is_encoder_decoder=bool(self.config.is_encoder_decoder),
+        )
 
     def _has_unfinished_sequences(self, this_peer_finished: bool, synced_gpus: bool, device: torch.device) -> bool:
         """
@@ -3191,6 +3358,13 @@ class GenerationMixin(ContinuousMixin):
         this_peer_finished = False
         unfinished_sequences = torch.ones(batch_size, dtype=torch.long, device=input_ids.device)
 
+        # Optional per-row RNG stream, so a row's samples do not depend on its batch peers. `None` keeps the
+        # historical `torch.multinomial` behavior.
+        batch_invariant_keys = self._batch_invariant_sampling_keys(
+            generation_config, input_ids, model_kwargs.get("attention_mask")
+        )
+        sampling_step = 0
+
         # `pad_token_id` is created on `inputs_tensor.device` in `_prepare_special_tokens`. For multimodal models
         # (e.g. BLIP-2, LLaVA) sharded across devices via `device_map="auto"`, `inputs_tensor` (e.g. `pixel_values`
         # on the vision encoder) and `input_ids` (on the language model) can live on different devices, so we need to
@@ -3273,8 +3447,12 @@ class GenerationMixin(ContinuousMixin):
                 # token selection
                 if do_sample:
                     probs = nn.functional.softmax(next_token_scores, dim=-1)
-                    # TODO (joao): this OP throws "skipping cudagraphs due to ['incompatible ops']", find solution
-                    next_tokens = torch.multinomial(probs, num_samples=1).squeeze(1)
+                    if batch_invariant_keys is not None:
+                        next_tokens = counter_multinomial(probs, batch_invariant_keys, sampling_step).squeeze(1)
+                    else:
+                        # TODO (joao): this OP throws "skipping cudagraphs due to ['incompatible ops']", find solution
+                        next_tokens = torch.multinomial(probs, num_samples=1).squeeze(1)
+                    sampling_step += 1
                 else:
                     next_tokens = torch.argmax(next_token_scores, dim=-1)
 

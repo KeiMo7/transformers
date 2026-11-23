@@ -145,6 +145,7 @@ class GenerativePreTrainedModel(Protocol):
     main_input_name: str
     base_model_prefix: str
     _is_stateful: bool
+    _last_batch_invariance_report: Any
     hf_quantizer: Any
     encoder: Any
     hf_device_map: dict[str, Any]
